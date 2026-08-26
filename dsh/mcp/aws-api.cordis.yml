@@ -7,7 +7,7 @@
         serverName: aws_api
         transport: stdio
         command: uvx
-        args: !!js [process.env.DSH_AWS_API_MCP_SPEC || 'awslabs.aws-api-mcp-server@latest']
+        args: !!js "[process.env.DSH_AWS_API_MCP_SPEC || 'awslabs.aws-api-mcp-server@latest']"
         env:
           AWS_PROFILE: !!js process.env.AWS_PROFILE || ''
           AWS_REGION: !!js process.env.AWS_REGION || ''

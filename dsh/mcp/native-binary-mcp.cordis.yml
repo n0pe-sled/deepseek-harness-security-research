@@ -8,7 +8,7 @@
         serverName: binary_analysis
         transport: stdio
         command: uv
-        args: !!js ['--directory', process.env.DSH_BINARY_MCP_DIR, 'run', 'python', '-m', 'src.server']
+        args: !!js "['--directory', process.env.DSH_BINARY_MCP_DIR, 'run', 'python', '-m', 'src.server']"
         env:
           GHIDRA_HOME: !!js process.env.GHIDRA_HOME || ''
           X64DBG_PATH: !!js process.env.X64DBG_PATH || ''

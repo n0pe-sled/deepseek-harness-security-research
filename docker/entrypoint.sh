@@ -4,6 +4,7 @@ set -eu
 dsh_root=${DSH_HOME:-/state/dsh}
 agents_root=${DSH_AGENTS_HOME:-/state/agents}
 campaign_root=/workspace
+trusted_host=${DSH_TRUSTED_HOST:-localhost:${DSH_PORT:-3080}}
 
 mkdir -p "$dsh_root/.agent-presets" "$dsh_root/skills" "$agents_root/skills" "$campaign_root"
 
@@ -64,5 +65,5 @@ if test "${ENABLE_GHIDRA_MCP:-0}" = 1; then
   set -- "$@" --patch /opt/framework/dsh/mcp/native-ghidra.cordis.yml
 fi
 
-set -- "$@" -- --no-open --host 127.0.0.1 --port "${DSH_PORT:-3080}" --trusted-host "${DSH_TRUSTED_HOST:-localhost:3080}"
+set -- "$@" -- --no-open --host 127.0.0.1 --port "${DSH_PORT:-3080}" --trusted-host "$trusted_host"
 exec "$@"
