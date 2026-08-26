@@ -1,4 +1,12 @@
 services:
+  network-anchor:
+    image: node:22-bookworm-slim
+    command: [sleep, infinity]
+    init: true
+    ports:
+      - 127.0.0.1:${DSH_PORT:-3080}:${DSH_PORT:-3080}
+    restart: unless-stopped
+
   security-research:
     build:
       context: .
@@ -11,11 +19,13 @@ services:
         DSH_SKILLS_SOURCE_URL: ${DSH_SKILLS_SOURCE_URL:-https://github.com/n0pe-sled/deepseek-harness-skills.git}
         DSH_SKILLS_SOURCE_REF: ${DSH_SKILLS_SOURCE_REF:-ae9880bfc478b30a48e5855385e08ea05bcd5108}
         GHIDRA_MCP_REF: ${GHIDRA_MCP_REF:-6f7e7e8988e1efde5dd23372df71fe05c115722e}
+        JD_MCP_DUO_VERSION: ${JD_MCP_DUO_VERSION:-v4.2.5.4}
+        JD_MCP_DUO_SHA256: ${JD_MCP_DUO_SHA256:-a68762013ca9375b72d7021a5732dba3743de67f7c25b1834f3579f00672ff3f}
+        WIRESHARK_MCP_REF: ${WIRESHARK_MCP_REF:-2a8c009fb38723a9212e47d6156cc8a6b2f624c0}
     image: deepseek-security-research:local
     init: true
     working_dir: /workspace
-    ports:
-      - 127.0.0.1:${DSH_PORT:-3080}:${DSH_PORT:-3080}
+    network_mode: service:network-anchor
     environment:
       DSH_HOME: /state/dsh
       DSH_AGENTS_HOME: /state/agents
@@ -35,15 +45,23 @@ services:
       LUDUS_URL: ${LUDUS_URL:-}
       LUDUS_API_KEY: ${LUDUS_API_KEY:-}
       DSH_LUDUS_MCP_SPEC: ${DSH_LUDUS_MCP_SPEC:-@badsectorlabs/ludus-mcp@0.2.0}
-      ENABLE_JAVA_MCP: ${ENABLE_JAVA_MCP:-0}
-      JD_MCP_DUO_PATH: /opt/jd-mcp-duo/bin/jd-mcp-duo
-      ENABLE_GHIDRA_MCP: ${ENABLE_GHIDRA_MCP:-0}
-      GHIDRA_MCP_URL: ${GHIDRA_MCP_URL:-http://ghidra-headless:8089/}
+      LUDUS_RANGE_CONNECT: ${LUDUS_RANGE_CONNECT:-auto}
+      LUDUS_WIREGUARD_CONFIG: ${LUDUS_WIREGUARD_CONFIG:-}
+      ENABLE_JAVA_MCP: ${ENABLE_JAVA_MCP:-1}
+      ENABLE_GHIDRA_MCP: ${ENABLE_GHIDRA_MCP:-1}
+      GHIDRA_MCP_URL: http://127.0.0.1:8089/
+      ENABLE_WIRESHARK_MCP: ${ENABLE_WIRESHARK_MCP:-1}
     volumes:
       - ${CAMPAIGN_DIR:-./runtime/campaign}:/workspace
       - ${DSH_STATE_DIR:-./runtime/dsh}:/state/dsh
       - ${DSH_AGENTS_STATE_DIR:-./runtime/agents}:/state/agents
-      - ${JD_MCP_DUO_DIR:-./runtime/jd-mcp-duo}:/opt/jd-mcp-duo:ro
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    depends_on:
+      - network-anchor
+      - ghidra-headless
     restart: unless-stopped
     healthcheck:
       test: [CMD, curl, -fsS, "http://127.0.0.1:${DSH_PORT:-3080}/"]
@@ -55,17 +73,19 @@ services:
   # The small stdio bridge runs in security-research; the actual parser,
   # analysis database, and Java/Ghidra runtime stay isolated here.
   ghidra-headless:
-    profiles: [native]
     build:
-      context: https://github.com/bethington/ghidra-mcp.git#${GHIDRA_MCP_REF:-6f7e7e8988e1efde5dd23372df71fe05c115722e}
-      dockerfile: docker/Dockerfile
+      context: .
+      dockerfile: docker/Ghidra.Dockerfile
+      additional_contexts:
+        ghidra_source: "https://github.com/bethington/ghidra-mcp.git#${GHIDRA_MCP_REF:-6f7e7e8988e1efde5dd23372df71fe05c115722e}"
     image: ghidra-mcp-headless:${GHIDRA_MCP_REF:-6f7e7e8988e1efde5dd23372df71fe05c115722e}
     init: true
-    ports:
-      - 127.0.0.1:18089:8089
+    network_mode: service:network-anchor
+    depends_on:
+      - network-anchor
     environment:
       GHIDRA_MCP_PORT: 8089
-      GHIDRA_MCP_BIND_ADDRESS: 0.0.0.0
+      GHIDRA_MCP_BIND_ADDRESS: 127.0.0.1
       GHIDRA_MCP_FILE_ROOT: /workspace
       GHIDRA_MCP_ALLOW_SCRIPTS: 0
       JAVA_OPTS: ${GHIDRA_JAVA_OPTS:--Xmx4g -XX:+UseG1GC}

@@ -1,14 +1,15 @@
-# Optional read-oriented PCAP analysis after installing Wireshark MCP.
+# PCAP analysis through pinned Wireshark MCP + tshark bundled in DSH.
 - insert:
     - id: security-mcp-wireshark
       name: '@deepseek-ai/dsh-mcp-client'
       config:
         serverName: wireshark
         transport: stdio
-        command: wireshark-mcp
+        command: /opt/wireshark-mcp/bin/wireshark-mcp
         args: []
         env:
           WIRESHARK_MCP_MAX_RESULT_CHARS: '16000'
+          WIRESHARK_MCP_ALLOWED_DIRS: /workspace
         cwd: !!js process.cwd()
         toolCallTimeoutMs: 120000
         failOnStartupError: true

@@ -91,14 +91,25 @@ loopback and a small in-container TCP proxy publishes only the selected host
 loopback port. The UI remains local at `http://127.0.0.1:3080` (or
 `DSH_PORT`). The host Docker socket is not mounted.
 
-For native/JNI analysis, set `ENABLE_GHIDRA_MCP=1` and start the optional,
-heavyweight Ghidra engine too:
+The normal launch includes the pinned jd-mcp-duo JAR/JDK, Wireshark MCP/tshark,
+and the heavyweight Ghidra headless sidecar. Disable individual analyzers with
+`ENABLE_JAVA_MCP=0`, `ENABLE_WIRESHARK_MCP=0`, or `ENABLE_GHIDRA_MCP=0`; the
+sidecar is still built, but no Ghidra tools enter that DSH session.
 
-```bash
-docker compose --profile native up --build
-```
+Ludus has two paths. Its MCP calls the HTTPS control-plane API. By default,
+`LUDUS_RANGE_CONNECT=auto` also retrieves the current user's WireGuard client
+configuration from that API, starts an in-container tunnel, and thereby gives
+shell tools and protocol clients direct access to the user's range VM routes.
+The generated peer private key lives only under `/run` in the container. If
+Docker Desktop is already connected through the host's working Ludus VPN, use
+`LUDUS_RANGE_CONNECT=host`; use `api-only` when no direct VM traffic is needed.
+The container has only `NET_ADMIN` plus `/dev/net/tun`, not host networking or
+the Docker socket.
 
-Ghidra is the one intentional MCP sidecar: its stdio bridge is small, but the
-server requires a real Ghidra/JDK installation. It is unprivileged, has
-persistent named volumes, and sees the campaign read-only. Ludus and AWS are
-remote API MCPs; jd-mcp-duo is a self-contained mounted release.
+Ghidra is the one intentional analysis sidecar: its stdio bridge is small, but
+the server requires a real Ghidra/JDK installation. It has a separate
+filesystem, persistent named volumes, a read-only campaign mount, and shares
+only a private network namespace with DSH so the security-hardened upstream
+bridge can use loopback. The Java and Wireshark stdio services
+live in DSH because their complete local engines are bundled and do not need
+independent network services.

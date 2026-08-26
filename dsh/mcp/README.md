@@ -35,23 +35,25 @@ integration.
 - Dotsider: install with `dotnet tool install -g Dotsider.Mcp`; executable is
   `dotsider-mcp`.
 - rbinilspy: build its ILSpy worker and Rust server, then set `RBINILSPY_PATH`.
-- jd-mcp-duo: download a reviewed platform release, set `JD_MCP_DUO_PATH` to
-  `bin/jd-mcp-duo`, and record its checksum. It writes its SQLite index inside
-  the campaign's `analysis/research/indexes/` directory.
+- jd-mcp-duo: the Compose image downloads and checksum-verifies the pinned JAR,
+  supplies JDK 25, and writes its SQLite index inside the campaign's
+  `analysis/research/indexes/` directory.
 - Binary MCP: clone `Sarks0/binary-mcp`, run `uv sync`, set
   `DSH_BINARY_MCP_DIR`, and set relevant analysis-tool paths.
-- Ghidra: the Compose `native` profile builds the reviewed GhidraMCP headless
-  engine in its own unprivileged container. The stdio bridge is pinned into the
-  DSH image. Set `ENABLE_GHIDRA_MCP=1`, start with `--profile native`, keep
-  strict program selectors enabled, and leave script execution disabled.
-- Wireshark: install `wireshark-mcp` and keep generated capture/objects inside
-  the campaign evidence directory.
+- Ghidra: Compose builds the reviewed GhidraMCP headless engine in its own
+  unprivileged container. The stdio bridge is pinned into the DSH image. Keep
+  strict program selectors enabled and leave script execution disabled.
+- Wireshark: Compose bundles the reviewed Wireshark MCP 2.0.0 commit and
+  `tshark`. Its allowed
+  input/output root is `/workspace`, preventing PCAP object export from
+  writing outside the campaign.
 - AWS API: set named `AWS_PROFILE`/`AWS_REGION`; pin
   `DSH_AWS_API_MCP_SPEC` after pilot review. Never put keys in YAML.
-- Ludus: export `LUDUS_API_KEY` only in the DSH launch environment and pass
-  `ludus.cordis.yml`. Supply `LUDUS_URL` from a private environment file. The
-  current official MCP requires Ludus v2 and exposes every API operation through
-  `call_ludus_api`; no confirmation stage is added by this framework. Reference:
+- Ludus: export `LUDUS_API_KEY` only in the DSH launch environment and supply
+  `LUDUS_URL` from the private `.env`. The official MCP requires Ludus v2 and
+  exposes every API operation through `call_ludus_api`; no confirmation stage
+  is added. `LUDUS_RANGE_CONNECT=auto` independently retrieves an ephemeral
+  per-user WireGuard config from that API for direct VM access. Reference:
   https://docs.ludus.cloud/docs/using-ludus/mcp/
 
 These upstream servers are processes, not research agents, so they do not
@@ -63,8 +65,8 @@ role contracts and DSH sandbox/approval layer still govern use.
 
 `stdio` describes how an MCP wrapper communicates; it does not mean the
 underlying product is bundled. API clients such as Ludus and AWS need no local
-engine. The jd-mcp-duo release bundles its Java/decompiler runtime and is
-mounted read-only into DSH. Ghidra needs a Java/Ghidra backend, so Compose
+engine, though Ludus direct VM traffic needs its range route. jd-mcp-duo and
+Wireshark MCP are bundled into DSH. Ghidra needs a Java/Ghidra backend, so Compose
 isolates that heavyweight parser and persists only `/data` and `/projects`.
 The campaign is mounted at the same `/workspace` path in both containers so
 program selectors resolve without giving Ghidra write access to evidence.
