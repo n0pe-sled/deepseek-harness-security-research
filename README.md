@@ -18,6 +18,11 @@ The hard scheduling controls are in the supplied agent preset:
   cannot delegate;
 - no fork, workflow, Ralph, or other delegation tools.
 
+Automatic compaction is explicit: at 65% of the routed model's context window,
+the agent summarizes older balanced history and retains the newest 15%
+verbatim. For a one-million-token route this means a roughly 650,000-token
+trigger and 150,000-token retained tail. Manual `/compact` remains available.
+
 Foreground execution blocks the orchestrator until the worker terminates. This
 gives a maximum of two agents in the campaign: orchestrator plus one worker.
 Separate root sessions remain an operator responsibility.

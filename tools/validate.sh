@@ -10,6 +10,8 @@ rg -q 'toolName: research_worker' "$preset"
 rg -q 'enableRunInBackground: false' "$preset"
 rg -q 'backgroundMode: one-shot' "$preset"
 rg -q 'maxDepth: 1' "$preset"
+rg -q 'thresholdRatio: 0.65' "$preset"
+rg -q 'retainRatio: 0.15' "$preset"
 rg -q 'default: security-research' "$framework_root/dsh/security-research-default.cordis.patch.yml"
 
 if rg -q 'dsh-tool-ralph|dsh-tool-workflow|subagent-fork' "$preset"; then
