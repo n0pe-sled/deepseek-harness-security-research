@@ -12,7 +12,7 @@
         compat:
           supportsDeveloperRole: false
           maxTokensField: max_tokens
-        reasoning: !!js process.env.RTX_SPARK_REASONING_EFFORT || 'high'
+        reasoning: !!js process.env.RTX_SPARK_REASONING_EFFORT || 'max'
         models:
           - id: !!js process.env.RTX_SPARK_MODEL_ID || 'deepseek-v4-flash-0731'
             name: !!js process.env.RTX_SPARK_MODEL_NAME || 'DeepSeek V4 Flash 0731'
@@ -22,3 +22,10 @@
               medium: medium
               high: high
               max: max
+
+# This overlay is loaded only when ENABLE_RTX_SPARK=1, so select the declared
+# route for Agents without a session-local model selection.
+- id: agent-default-model
+  config:
+    provider: rtx-spark
+    model: !!js process.env.RTX_SPARK_MODEL_ID || 'deepseek-v4-flash-0731'

@@ -10,9 +10,10 @@ dsh_bin=/opt/framework/docker/dsh-launch.mjs
 
 mkdir -p "$dsh_root/.agent-presets" "$dsh_root/skills" "$agents_root/skills" "$campaign_root"
 
-if test ! -e "$dsh_root/.agent-presets/security-research"; then
-  cp -R /opt/framework/dsh/agent-presets/security-research "$dsh_root/.agent-presets/security-research"
-fi
+# This preset is framework-owned. Refresh it on every startup so routing and
+# concurrency fixes reach persistent profiles after an image upgrade.
+mkdir -p "$dsh_root/.agent-presets/security-research"
+cp -R /opt/framework/dsh/agent-presets/security-research/. "$dsh_root/.agent-presets/security-research/"
 
 for source in /opt/framework/skills/*; do
   name=$(basename "$source")
@@ -44,7 +45,7 @@ if test "${ENABLE_RTX_SPARK:-0}" = 1; then
     echo "ENABLE_RTX_SPARK=1 requires RTX_SPARK_BASE_URL" >&2
     exit 2
   fi
-  case "${RTX_SPARK_REASONING_EFFORT:-high}" in
+  case "${RTX_SPARK_REASONING_EFFORT:-max}" in
     low|medium|high|max) ;;
     *) echo "RTX_SPARK_REASONING_EFFORT must be low, medium, high, or max" >&2; exit 2 ;;
   esac

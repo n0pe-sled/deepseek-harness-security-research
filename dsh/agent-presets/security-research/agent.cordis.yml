@@ -77,6 +77,9 @@
     enableRunInBackground: false
     backgroundMode: one-shot
     maxDepth: 1
+    # The RTX deployment route is forced for workers when enabled. This avoids
+    # a fresh spawn falling back to the built-in DeepSeek provider.
+    agentOptions: !!js "process.env.ENABLE_RTX_SPARK === '1' ? { provider: 'rtx-spark', model: process.env.RTX_SPARK_MODEL_ID || 'deepseek-v4-flash-0731' } : {}"
     persona: >-
       You are the sole foreground worker in an authorized security campaign.
       Obey the worker_role and bounded packet. Persist your typed report and
