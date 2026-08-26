@@ -36,5 +36,11 @@ rg -q 'command: /opt/ghidra-mcp-bridge/bin/bridge-mcp-ghidra' "$framework_root/d
 rg -q 'ghidra-headless:' "$framework_root/compose.yaml"
 rg -q 'GHIDRA_MCP_FILE_ROOT: /workspace' "$framework_root/compose.yaml"
 rg -q 'GHIDRA_MCP_ALLOW_SCRIPTS: 0' "$framework_root/compose.yaml"
+rg -q 'pnpm --dir /opt/deepseek-harness dsh' "$framework_root/docker/entrypoint.sh"
+rg -q 'n0pe-sled/deepseek-harness.git' "$framework_root/docker/Dockerfile"
+if rg -q 'DSH_SPEC|npm install --global.*@deepseek-ai/dsh' "$framework_root/docker/Dockerfile" "$framework_root/compose.yaml"; then
+  echo "validation failed: published DSH install remains" >&2
+  exit 1
+fi
 
 echo "static validation passed: one foreground worker, depth one, no alternate delegation"

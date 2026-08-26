@@ -4,7 +4,8 @@ services:
       context: .
       dockerfile: docker/Dockerfile
       args:
-        DSH_SPEC: ${DSH_SPEC:-@deepseek-ai/dsh@latest}
+        DSH_SOURCE_URL: ${DSH_SOURCE_URL:-https://github.com/n0pe-sled/deepseek-harness.git}
+        DSH_SOURCE_REF: ${DSH_SOURCE_REF:-b150a551b8d465e31e418e1b2eaf5e79bbb7d28e}
         GHIDRA_MCP_REF: ${GHIDRA_MCP_REF:-6f7e7e8988e1efde5dd23372df71fe05c115722e}
     image: deepseek-security-research:local
     init: true

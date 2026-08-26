@@ -5,6 +5,11 @@ research orchestrator. The orchestrator may run one foreground worker at a
 time. Infrastructure, discovery, simulation, and validation are worker modes,
 not concurrently running teams.
 
+The Docker image fetches the pinned revision of
+`n0pe-sled/deepseek-harness`, installs its locked pnpm workspace, builds all
+production artifacts from source, and launches that source checkout with
+`pnpm dsh`. It does not install the published `@deepseek-ai/dsh` package.
+
 The hard scheduling controls are in the supplied agent preset:
 
 - one `research_worker` delegation tool;

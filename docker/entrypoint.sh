@@ -21,7 +21,7 @@ if test ! -f "$campaign_root/SCOPE.md"; then
   cp -R /opt/framework/project-template/. "$campaign_root/"
 fi
 
-set -- dsh --profile web --patch /opt/framework/dsh/security-research-default.cordis.patch.yml
+set -- pnpm --dir /opt/deepseek-harness dsh --profile web --patch /opt/framework/dsh/security-research-default.cordis.patch.yml
 
 if test "${ENABLE_LUDUS_MCP:-0}" = 1; then
   if test -z "${LUDUS_URL:-}"; then
