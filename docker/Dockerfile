@@ -20,14 +20,56 @@ RUN pnpm --dir /opt/deepseek-harness install --frozen-lockfile \
     && pnpm --dir /opt/deepseek-harness run build \
     && rm -rf /opt/deepseek-harness/.git
 
+FROM node:22-bookworm-slim AS customizations-builder
+
+ARG DSH_PLUGINS_SOURCE_URL=https://github.com/n0pe-sled/deepseek-harness-plugins.git
+ARG DSH_PLUGINS_SOURCE_REF=530b595efdf787c97474c4d7eee8ee8caa96d6f2
+ARG DSH_SKILLS_SOURCE_URL=https://github.com/n0pe-sled/deepseek-harness-skills.git
+ARG DSH_SKILLS_SOURCE_REF=ae9880bfc478b30a48e5855385e08ea05bcd5108
+
+RUN apt-get update \
+    && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ca-certificates git \
+    && npm install --global pnpm@11.7.0 \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN mkdir /opt/deepseek-harness-plugins \
+    && git -C /opt/deepseek-harness-plugins init \
+    && git -C /opt/deepseek-harness-plugins remote add origin "${DSH_PLUGINS_SOURCE_URL}" \
+    && git -C /opt/deepseek-harness-plugins fetch --depth 1 origin "${DSH_PLUGINS_SOURCE_REF}" \
+    && git -C /opt/deepseek-harness-plugins checkout --detach FETCH_HEAD \
+    && test "$(git -C /opt/deepseek-harness-plugins rev-parse HEAD)" = "${DSH_PLUGINS_SOURCE_REF}" \
+    && mkdir /opt/deepseek-harness-skills \
+    && git -C /opt/deepseek-harness-skills init \
+    && git -C /opt/deepseek-harness-skills remote add origin "${DSH_SKILLS_SOURCE_URL}" \
+    && git -C /opt/deepseek-harness-skills fetch --depth 1 origin "${DSH_SKILLS_SOURCE_REF}" \
+    && git -C /opt/deepseek-harness-skills checkout --detach FETCH_HEAD \
+    && test "$(git -C /opt/deepseek-harness-skills rev-parse HEAD)" = "${DSH_SKILLS_SOURCE_REF}"
+
+RUN pnpm --dir /opt/deepseek-harness-plugins/skill-mcp-manager install --frozen-lockfile \
+    && pnpm --dir /opt/deepseek-harness-plugins/skill-mcp-manager run build \
+    && pnpm --dir /opt/deepseek-harness-plugins/system-prompt-editor install --frozen-lockfile \
+    && pnpm --dir /opt/deepseek-harness-plugins/system-prompt-editor run build \
+    && pnpm --dir /opt/deepseek-harness-plugins/web-search-searxng install --frozen-lockfile \
+    && pnpm --dir /opt/deepseek-harness-plugins/web-search-searxng run build \
+    && rm -rf /opt/deepseek-harness-plugins/.git /opt/deepseek-harness-skills/.git
+
 FROM node:22-bookworm-slim
 
 ARG GHIDRA_MCP_REF=6f7e7e8988e1efde5dd23372df71fe05c115722e
 ARG DSH_SOURCE_URL=https://github.com/n0pe-sled/deepseek-harness.git
 ARG DSH_SOURCE_REF=b150a551b8d465e31e418e1b2eaf5e79bbb7d28e
+ARG DSH_PLUGINS_SOURCE_URL=https://github.com/n0pe-sled/deepseek-harness-plugins.git
+ARG DSH_PLUGINS_SOURCE_REF=530b595efdf787c97474c4d7eee8ee8caa96d6f2
+ARG DSH_SKILLS_SOURCE_URL=https://github.com/n0pe-sled/deepseek-harness-skills.git
+ARG DSH_SKILLS_SOURCE_REF=ae9880bfc478b30a48e5855385e08ea05bcd5108
 
 LABEL org.opencontainers.image.source="${DSH_SOURCE_URL}" \
-      org.opencontainers.image.revision="${DSH_SOURCE_REF}"
+      org.opencontainers.image.revision="${DSH_SOURCE_REF}" \
+      org.deepseek-harness.plugins.source="${DSH_PLUGINS_SOURCE_URL}" \
+      org.deepseek-harness.plugins.revision="${DSH_PLUGINS_SOURCE_REF}" \
+      org.deepseek-harness.skills.source="${DSH_SKILLS_SOURCE_URL}" \
+      org.deepseek-harness.skills.revision="${DSH_SKILLS_SOURCE_REF}"
 
 RUN apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ca-certificates curl git openssh-client python3 python3-venv ripgrep \
@@ -38,6 +80,8 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=dsh-builder /opt/deepseek-harness /opt/deepseek-harness
+COPY --from=customizations-builder /opt/deepseek-harness-plugins /opt/deepseek-harness-plugins
+COPY --from=customizations-builder /opt/deepseek-harness-skills /opt/deepseek-harness-skills
 COPY . /opt/framework
 RUN chmod +x /opt/framework/docker/entrypoint.sh /opt/framework/tools/validate.sh \
     && /opt/framework/tools/validate.sh

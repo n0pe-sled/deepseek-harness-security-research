@@ -2,9 +2,10 @@
 set -eu
 
 dsh_root=${DSH_HOME:-/state/dsh}
+agents_root=${DSH_AGENTS_HOME:-/state/agents}
 campaign_root=/workspace
 
-mkdir -p "$dsh_root/.agent-presets" "$dsh_root/skills" "$campaign_root"
+mkdir -p "$dsh_root/.agent-presets" "$dsh_root/skills" "$agents_root/skills" "$campaign_root"
 
 if test ! -e "$dsh_root/.agent-presets/security-research"; then
   cp -R /opt/framework/dsh/agent-presets/security-research "$dsh_root/.agent-presets/security-research"
@@ -17,9 +18,21 @@ for source in /opt/framework/skills/*; do
   fi
 done
 
+for source in /opt/deepseek-harness-skills/*; do
+  name=$(basename "$source")
+  if test -f "$source/SKILL.md" && test ! -e "$agents_root/skills/$name"; then
+    cp -R "$source" "$agents_root/skills/$name"
+  fi
+done
+
 if test ! -f "$campaign_root/SCOPE.md"; then
   cp -R /opt/framework/project-template/. "$campaign_root/"
 fi
+
+for plugin in skill-mcp-manager system-prompt-editor web-search-searxng; do
+  pnpm --dir /opt/deepseek-harness dsh plugin --profile web add \
+    "/opt/deepseek-harness-plugins/$plugin" --offline >/dev/null
+done
 
 set -- pnpm --dir /opt/deepseek-harness dsh --profile web --patch /opt/framework/dsh/security-research-default.cordis.patch.yml
 

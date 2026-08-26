@@ -9,6 +9,11 @@ The Docker image fetches the pinned revision of
 `n0pe-sled/deepseek-harness`, installs its locked pnpm workspace, builds all
 production artifacts from source, and launches that source checkout with
 `pnpm dsh`. It does not install the published `@deepseek-ai/dsh` package.
+The image also checks out pinned revisions of `n0pe-sled/deepseek-harness-plugins`
+and `n0pe-sled/deepseek-harness-skills`, rebuilds all custom plugins from
+source, registers them in the Web profile, and seeds the custom skills into the
+persistent agent-skills root. This includes `unslop`, `skill-mcp-manager`, and
+`system-prompt-editor`.
 
 The hard scheduling controls are in the supplied agent preset:
 

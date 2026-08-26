@@ -40,6 +40,9 @@ rg -q 'GHIDRA_MCP_FILE_ROOT: /workspace' "$framework_root/compose.yaml"
 rg -q 'GHIDRA_MCP_ALLOW_SCRIPTS: 0' "$framework_root/compose.yaml"
 rg -q 'pnpm --dir /opt/deepseek-harness dsh' "$framework_root/docker/entrypoint.sh"
 rg -q 'n0pe-sled/deepseek-harness.git' "$framework_root/docker/Dockerfile"
+rg -q 'n0pe-sled/deepseek-harness-plugins.git' "$framework_root/docker/Dockerfile"
+rg -q 'n0pe-sled/deepseek-harness-skills.git' "$framework_root/docker/Dockerfile"
+rg -q 'for plugin in skill-mcp-manager system-prompt-editor web-search-searxng' "$framework_root/docker/entrypoint.sh"
 if rg -q 'DSH_SPEC|npm install --global.*@deepseek-ai/dsh' "$framework_root/docker/Dockerfile" "$framework_root/compose.yaml"; then
   echo "validation failed: published DSH install remains" >&2
   exit 1

@@ -6,6 +6,10 @@ services:
       args:
         DSH_SOURCE_URL: ${DSH_SOURCE_URL:-https://github.com/n0pe-sled/deepseek-harness.git}
         DSH_SOURCE_REF: ${DSH_SOURCE_REF:-b150a551b8d465e31e418e1b2eaf5e79bbb7d28e}
+        DSH_PLUGINS_SOURCE_URL: ${DSH_PLUGINS_SOURCE_URL:-https://github.com/n0pe-sled/deepseek-harness-plugins.git}
+        DSH_PLUGINS_SOURCE_REF: ${DSH_PLUGINS_SOURCE_REF:-530b595efdf787c97474c4d7eee8ee8caa96d6f2}
+        DSH_SKILLS_SOURCE_URL: ${DSH_SKILLS_SOURCE_URL:-https://github.com/n0pe-sled/deepseek-harness-skills.git}
+        DSH_SKILLS_SOURCE_REF: ${DSH_SKILLS_SOURCE_REF:-ae9880bfc478b30a48e5855385e08ea05bcd5108}
         GHIDRA_MCP_REF: ${GHIDRA_MCP_REF:-6f7e7e8988e1efde5dd23372df71fe05c115722e}
     image: deepseek-security-research:local
     init: true
@@ -13,6 +17,7 @@ services:
     network_mode: host
     environment:
       DSH_HOME: /state/dsh
+      DSH_AGENTS_HOME: /state/agents
       DSH_PORT: ${DSH_PORT:-3080}
       DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
       OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
@@ -28,6 +33,7 @@ services:
     volumes:
       - ${CAMPAIGN_DIR:-./runtime/campaign}:/workspace
       - ${DSH_STATE_DIR:-./runtime/dsh}:/state/dsh
+      - ${DSH_AGENTS_STATE_DIR:-./runtime/agents}:/state/agents
       - ${JD_MCP_DUO_DIR:-./runtime/jd-mcp-duo}:/opt/jd-mcp-duo:ro
     restart: unless-stopped
     healthcheck:
