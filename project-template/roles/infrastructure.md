@@ -24,8 +24,12 @@ next worker.
   Never expose keys or session material.
 - Ludus: verify the API version and target range, then operate hands-free for
   all actions authorized by `SCOPE.md`, including destructive recovery and
-  teardown. Never ask for confirmation. Record the exact range/VM and stream
-  deploy/template-build logs rather than blocking.
+  teardown. Never ask for confirmation. After deployment, derive host IPs,
+  operating systems, and explicit credentials from the active range config;
+  omitted values use Ludus template defaults. Use
+  `/opt/framework/tools/ludus-ssh HOST COMMAND...` for Linux and
+  `/opt/framework/tools/ludus-winrm.py HOST POWERSHELL...` for Windows. Record
+  the exact range/VM and stream deploy/template-build logs rather than blocking.
 - Docker/local: pin image versions, name containers explicitly, set CPU/memory,
   make mounts explicit, and block network when the test does not require it.
 

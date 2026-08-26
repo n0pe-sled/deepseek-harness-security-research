@@ -1,0 +1,41 @@
+#!/bin/sh
+set -eu
+
+if test "$#" -lt 1; then
+  echo "usage: ludus-ssh HOST [COMMAND ...]" >&2
+  exit 2
+fi
+
+host=$1
+shift
+case "$host" in
+  ''|*[!A-Za-z0-9._-]*) echo "ludus-ssh: invalid host" >&2; exit 2 ;;
+esac
+
+ssh_user=${LUDUS_SSH_USER:-debian}
+known_hosts=/state/dsh/ssh/known_hosts
+mkdir -p /state/dsh/ssh
+chmod 700 /state/dsh/ssh
+
+if test -n "${LUDUS_SSH_KEY_PATH:-}"; then
+  if test ! -r "$LUDUS_SSH_KEY_PATH"; then
+    echo "ludus-ssh: LUDUS_SSH_KEY_PATH is not readable in the container" >&2
+    exit 2
+  fi
+  set -- ssh -i "$LUDUS_SSH_KEY_PATH" -o BatchMode=yes \
+    -o StrictHostKeyChecking=accept-new -o UserKnownHostsFile="$known_hosts" \
+    -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=2 \
+    "$ssh_user@$host" "$@"
+elif test -n "${LUDUS_SSH_PASSWORD:-}"; then
+  SSHPASS=$LUDUS_SSH_PASSWORD
+  export SSHPASS
+  set -- sshpass -e ssh -o StrictHostKeyChecking=accept-new \
+    -o UserKnownHostsFile="$known_hosts" -o ConnectTimeout=15 \
+    -o ServerAliveInterval=15 -o ServerAliveCountMax=2 "$ssh_user@$host" "$@"
+else
+  set -- ssh -o BatchMode=yes -o StrictHostKeyChecking=accept-new \
+    -o UserKnownHostsFile="$known_hosts" -o ConnectTimeout=15 \
+    -o ServerAliveInterval=15 -o ServerAliveCountMax=2 "$ssh_user@$host" "$@"
+fi
+
+exec "$@"

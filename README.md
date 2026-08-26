@@ -108,6 +108,12 @@ Docker Desktop is already connected through the host's working Ludus VPN, use
 The container has only `NET_ADMIN` plus `/dev/net/tun`, not host networking or
 the Docker socket.
 
+For VM execution, the infrastructure worker queries the active range through
+Ludus MCP and uses `ludus-ssh` for Linux or `ludus-winrm.py` for Windows.
+Standard template credentials are configured for unattended access. Explicit
+range-config credentials take precedence, and private overrides remain in
+`.env`.
+
 Ghidra is the one intentional analysis sidecar: its stdio bridge is small, but
 the server requires a real Ghidra/JDK installation. It has a separate
 filesystem, persistent named volumes, a read-only campaign mount, and shares

@@ -77,12 +77,14 @@ LABEL org.opencontainers.image.source="${DSH_SOURCE_URL}" \
       org.deepseek-harness.skills.revision="${DSH_SKILLS_SOURCE_REF}"
 
 RUN apt-get update \
-    && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ca-certificates curl git iproute2 iptables openresolv openssh-client python3 python3-venv ripgrep socat tshark wireguard-tools \
+    && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ca-certificates curl git iproute2 iptables openresolv openssh-client python3 python3-venv ripgrep socat sshpass tshark wireguard-tools \
     && npm install --global pnpm@11.7.0 \
     && python3 -m venv /opt/ghidra-mcp-bridge \
     && /opt/ghidra-mcp-bridge/bin/pip install --no-cache-dir "git+https://github.com/bethington/ghidra-mcp.git@${GHIDRA_MCP_REF}" \
     && python3 -m venv /opt/wireshark-mcp \
     && /opt/wireshark-mcp/bin/pip install --no-cache-dir "git+https://github.com/bx33661/Wireshark-MCP.git@${WIRESHARK_MCP_REF}" \
+    && python3 -m venv /opt/windows-remote \
+    && /opt/windows-remote/bin/pip install --no-cache-dir "pywinrm==0.5.0" \
     && mkdir -p /opt/jd-mcp-duo \
     && curl -fsSL "https://github.com/AgeloVito/jd-mcp-duo/releases/download/${JD_MCP_DUO_VERSION}/jd-mcp-duo.jar" -o /opt/jd-mcp-duo/jd-mcp-duo.jar \
     && echo "${JD_MCP_DUO_SHA256}  /opt/jd-mcp-duo/jd-mcp-duo.jar" | sha256sum -c - \
@@ -94,7 +96,7 @@ COPY --from=customizations-builder /opt/deepseek-harness-plugins /opt/deepseek-h
 COPY --from=customizations-builder /opt/deepseek-harness-skills /opt/deepseek-harness-skills
 COPY --from=java-runtime /opt/java/openjdk /opt/java/openjdk
 COPY . /opt/framework
-RUN chmod +x /opt/framework/docker/entrypoint.sh /opt/framework/docker/ludus-wireguard.py /opt/framework/tools/validate.sh \
+RUN chmod +x /opt/framework/docker/entrypoint.sh /opt/framework/docker/ludus-wireguard.py /opt/framework/tools/ludus-ssh /opt/framework/tools/ludus-winrm.py /opt/framework/tools/validate.sh \
     && /opt/framework/tools/validate.sh
 
 WORKDIR /workspace
