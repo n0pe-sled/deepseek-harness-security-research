@@ -71,11 +71,12 @@ global prompt editor.
 
 ## Docker Compose
 
-Copy `docker/.env.example` to `.env`, fill model/Ludus variables, and run from
+Copy `.env.example` to `.env`, fill model/Ludus variables, and run from
 the repository root:
 
 ```bash
-docker compose --env-file docker/.env.example up --build
+cp .env.example .env
+docker compose up --build
 ```
 
 An empty `CAMPAIGN_DIR` is initialized from the generic project template.
@@ -89,7 +90,7 @@ For native/JNI analysis, set `ENABLE_GHIDRA_MCP=1` and start the optional,
 heavyweight Ghidra engine too:
 
 ```bash
-docker compose --env-file docker/.env.example --profile native up --build
+docker compose --profile native up --build
 ```
 
 Ghidra is the one intentional MCP sidecar: its stdio bridge is small, but the
