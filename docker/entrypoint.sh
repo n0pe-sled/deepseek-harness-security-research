@@ -44,6 +44,10 @@ if test "${ENABLE_RTX_SPARK:-0}" = 1; then
     echo "ENABLE_RTX_SPARK=1 requires RTX_SPARK_BASE_URL" >&2
     exit 2
   fi
+  case "${RTX_SPARK_REASONING_EFFORT:-high}" in
+    low|medium|high|max) ;;
+    *) echo "RTX_SPARK_REASONING_EFFORT must be low, medium, high, or max" >&2; exit 2 ;;
+  esac
   set -- "$@" --patch /opt/framework/dsh/models/rtx-spark.cordis.yml
 fi
 

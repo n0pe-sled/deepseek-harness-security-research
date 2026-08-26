@@ -71,8 +71,9 @@ global prompt editor.
 
 Set `ENABLE_RTX_SPARK=1` plus the private `RTX_SPARK_BASE_URL` and
 `RTX_SPARK_API_KEY` in `.env` to register the bundled OpenAI-compatible custom
-route. Its display name, model id/name, and context window are also overridable
-from `.env`; the default capacity is 1,048,576 tokens.
+route. Its display name, model id/name, context window, and default reasoning
+effort are also overridable from `.env`; the default capacity is 1,048,576
+tokens and the default effort is `high`.
 
 ## Docker Compose
 
