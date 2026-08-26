@@ -95,9 +95,12 @@ COPY --from=dsh-builder /opt/deepseek-harness /opt/deepseek-harness
 COPY --from=customizations-builder /opt/deepseek-harness-plugins /opt/deepseek-harness-plugins
 COPY --from=customizations-builder /opt/deepseek-harness-skills /opt/deepseek-harness-skills
 COPY --from=java-runtime /opt/java/openjdk /opt/java/openjdk
+ENV JAVA_HOME=/opt/java/openjdk \
+    PATH=/opt/java/openjdk/bin:$PATH
 COPY . /opt/framework
 RUN chmod +x /opt/framework/docker/entrypoint.sh /opt/framework/docker/ludus-wireguard.py /opt/framework/tools/ludus-ssh /opt/framework/tools/ludus-winrm.py /opt/framework/tools/validate.sh \
-    && /opt/framework/tools/validate.sh
+    && /opt/framework/tools/validate.sh \
+    && javap -version
 
 WORKDIR /workspace
 EXPOSE 3080

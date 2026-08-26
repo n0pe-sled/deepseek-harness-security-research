@@ -48,6 +48,7 @@ rg -q 'WIRESHARK_MCP_ALLOWED_DIRS: /workspace' "$framework_root/dsh/mcp/capture-
 rg -q 'LUDUS_RANGE_CONNECT.*auto' "$framework_root/compose.yaml"
 rg -q 'sshpass' "$framework_root/docker/Dockerfile"
 rg -q 'pywinrm==0.5.0' "$framework_root/docker/Dockerfile"
+rg -Fq 'PATH=/opt/java/openjdk/bin:$PATH' "$framework_root/docker/Dockerfile"
 test -f "$framework_root/tools/ludus-ssh"
 test -f "$framework_root/tools/ludus-winrm.py"
 rg -q 'command: /opt/ghidra-mcp-bridge/bin/bridge-mcp-ghidra' "$framework_root/dsh/mcp/native-ghidra.cordis.yml"
