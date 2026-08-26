@@ -1,0 +1,14 @@
+# Optional read-oriented PCAP analysis after installing Wireshark MCP.
+- insert:
+    - id: security-mcp-wireshark
+      name: '@deepseek-ai/dsh-mcp-client'
+      config:
+        serverName: wireshark
+        transport: stdio
+        command: wireshark-mcp
+        args: []
+        env:
+          WIRESHARK_MCP_MAX_RESULT_CHARS: '16000'
+        cwd: !!js process.cwd()
+        toolCallTimeoutMs: 120000
+        failOnStartupError: true

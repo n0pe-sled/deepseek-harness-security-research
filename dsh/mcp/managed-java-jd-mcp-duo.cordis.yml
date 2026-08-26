@@ -1,0 +1,16 @@
+# Java/JVM artifact analysis via jd-mcp-duo. Download a reviewed platform
+# release and set JD_MCP_DUO_PATH to its bin/jd-mcp-duo executable.
+- insert:
+    - id: security-mcp-java-bytecode
+      name: '@deepseek-ai/dsh-mcp-client'
+      config:
+        serverName: java_bytecode
+        transport: stdio
+        command: !!js process.env.JD_MCP_DUO_PATH || 'jd-mcp-duo'
+        args: []
+        env:
+          JAVA_TOOL_OPTIONS: !!js >-
+            '-Djd.mcp.sqlite.index=' + process.getBuiltinModule('node:path').join(process.cwd(), 'analysis', 'research', 'indexes', 'java.sqlite')
+        cwd: !!js process.cwd()
+        toolCallTimeoutMs: 180000
+        failOnStartupError: true

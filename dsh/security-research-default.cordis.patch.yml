@@ -1,0 +1,4 @@
+# Select the installed two-agent preset for every new session in this profile.
+- id: agent-presets
+  config:
+    default: security-research

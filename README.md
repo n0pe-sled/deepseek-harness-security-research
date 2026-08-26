@@ -1,0 +1,83 @@
+# Security Research Agent Framework for DeepSeek Harness
+
+This package turns one DeepSeek Harness session into a persistent security
+research orchestrator. The orchestrator may run one foreground worker at a
+time. Infrastructure, discovery, simulation, and validation are worker modes,
+not concurrently running teams.
+
+The hard scheduling controls are in the supplied agent preset:
+
+- one `research_worker` delegation tool;
+- foreground, one-shot delegation with no background argument;
+- `maxDepth: 1`, so a root orchestrator can create one child and that child
+  cannot delegate;
+- no fork, workflow, Ralph, or other delegation tools.
+
+Foreground execution blocks the orchestrator until the worker terminates. This
+gives a maximum of two agents in the campaign: orchestrator plus one worker.
+Separate root sessions remain an operator responsibility.
+
+## Package layout
+
+- `project-template/AGENTS.md`: campaign controller and evidence gates.
+- `roles/`: bounded worker contracts passed in task packets.
+- `skills/`: role guides compatible with `deepseek-harness-skills`.
+- `dsh/agent-presets/`: importable DeepSeek agent preset.
+- `dsh/mcp/`: real upstream MCP configuration rows and adapter guidance.
+- `project-template/analysis/research/`: durable campaign state and schemas.
+- `tools/install.sh`: installer for the existing skills/plugins layout.
+
+## Install
+
+Set the locations of stable checkouts, then run:
+
+```bash
+export DSH_SKILLS_REPO="$HOME/deepseek-harness-skills"
+export DSH_PLUGINS_REPO="$HOME/deepseek-harness-plugins"
+./tools/install.sh
+```
+
+The installer never overwrites a skill or preset. `DSH_HOME`,
+`DSH_AGENTS_HOME`, `DSH_SKILLS_REPO`, and `DSH_PLUGINS_REPO` may be set for
+non-default layouts.
+
+Create a campaign by copying `project-template`, edit `SCOPE.md`, and start DSH
+with that directory as the session working directory. Pick the
+`Security Research (two-agent)` preset. Add MCP rows with your Skill & MCP
+Manager or pass one of the overlays documented under `dsh/mcp/`.
+
+Use one managed backend and, when needed, one native backend. Small models
+perform worse when overlapping decompilers return conflicting symbol models.
+
+The framework reuses your Skill & MCP Manager for live MCP lifecycle and your
+System Prompt Editor for optional machine-level additions. The campaign
+`AGENTS.md` remains authoritative; do not put target-specific facts into the
+global prompt editor.
+
+## Docker Compose
+
+Copy `docker/.env.example` to `.env`, fill model/Ludus variables, and run from
+the repository root:
+
+```bash
+docker compose --env-file docker/.env.example up --build
+```
+
+An empty `CAMPAIGN_DIR` is initialized from the generic project template.
+DSH state and the campaign are bind-mounted, so
+container replacement does not lose evidence. The container uses host
+networking because DSH deliberately accepts only loopback binds; the UI remains
+local at `http://127.0.0.1:3080`. Host networking also preserves private Ludus
+range routes. The host Docker socket is not mounted.
+
+For native/JNI analysis, set `ENABLE_GHIDRA_MCP=1` and start the optional,
+heavyweight Ghidra engine too:
+
+```bash
+docker compose --env-file docker/.env.example --profile native up --build
+```
+
+Ghidra is the one intentional MCP sidecar: its stdio bridge is small, but the
+server requires a real Ghidra/JDK installation. It is unprivileged, has
+persistent named volumes, and sees the campaign read-only. Ludus and AWS are
+remote API MCPs; jd-mcp-duo is a self-contained mounted release.

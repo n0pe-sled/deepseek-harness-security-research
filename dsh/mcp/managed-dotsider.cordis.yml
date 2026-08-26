@@ -1,0 +1,13 @@
+# .NET managed analysis. Install Dotsider.Mcp first and pass this overlay.
+- insert:
+    - id: security-mcp-dotsider
+      name: '@deepseek-ai/dsh-mcp-client'
+      config:
+        serverName: dotsider
+        transport: stdio
+        command: dotsider-mcp
+        args: []
+        env: {}
+        cwd: !!js process.cwd()
+        toolCallTimeoutMs: 120000
+        failOnStartupError: true

@@ -1,0 +1,3 @@
+name: Security Research (two-agent)
+description: Persistent campaign orchestrator with exactly one foreground non-delegating worker.
+order: 60

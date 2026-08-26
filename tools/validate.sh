@@ -1,0 +1,40 @@
+#!/bin/sh
+set -eu
+
+framework_root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+preset="$framework_root/dsh/agent-presets/security-research/agent.cordis.yml"
+
+test -f "$preset"
+test "$(rg -c "name: '@deepseek-ai/dsh-tool-subagent'" "$preset")" -eq 1
+rg -q 'toolName: research_worker' "$preset"
+rg -q 'enableRunInBackground: false' "$preset"
+rg -q 'backgroundMode: one-shot' "$preset"
+rg -q 'maxDepth: 1' "$preset"
+rg -q 'default: security-research' "$framework_root/dsh/security-research-default.cordis.patch.yml"
+
+if rg -q 'dsh-tool-ralph|dsh-tool-workflow|subagent-fork' "$preset"; then
+  echo "validation failed: forbidden concurrent delegation surface" >&2
+  exit 1
+fi
+
+for skill in "$framework_root"/skills/*/SKILL.md; do
+  test -f "$skill"
+  rg -q '^name: [a-z0-9-]+$' "$skill"
+  rg -q '^description: .+' "$skill"
+done
+
+for contract in task-packet worker-report candidate experiment chain; do
+  test -f "$framework_root/project-template/analysis/research/contracts/$contract.md"
+done
+
+test -f "$framework_root/dsh/mcp/ludus.cordis.yml"
+rg -q '@badsectorlabs/ludus-mcp@0.2.0' "$framework_root/dsh/mcp/ludus.cordis.yml"
+rg -q 'Never ask for confirmation' "$framework_root/project-template/roles/infrastructure.md"
+test -f "$framework_root/dsh/mcp/managed-java-jd-mcp-duo.cordis.yml"
+rg -q 'serverName: java_bytecode' "$framework_root/dsh/mcp/managed-java-jd-mcp-duo.cordis.yml"
+rg -q 'command: /opt/ghidra-mcp-bridge/bin/bridge-mcp-ghidra' "$framework_root/dsh/mcp/native-ghidra.cordis.yml"
+rg -q 'ghidra-headless:' "$framework_root/compose.yaml"
+rg -q 'GHIDRA_MCP_FILE_ROOT: /workspace' "$framework_root/compose.yaml"
+rg -q 'GHIDRA_MCP_ALLOW_SCRIPTS: 0' "$framework_root/compose.yaml"
+
+echo "static validation passed: one foreground worker, depth one, no alternate delegation"

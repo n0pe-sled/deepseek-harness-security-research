@@ -1,0 +1,15 @@
+# Small stdio bridge in DSH; Ghidra itself runs in the isolated sidecar.
+- insert:
+    - id: security-mcp-ghidra
+      name: '@deepseek-ai/dsh-mcp-client'
+      config:
+        serverName: ghidra
+        transport: stdio
+        command: /opt/ghidra-mcp-bridge/bin/bridge-mcp-ghidra
+        args: []
+        env:
+          GHIDRA_MCP_REQUIRE_PROGRAM_SELECTORS: '1'
+          GHIDRA_MCP_URL: !!js process.env.GHIDRA_MCP_URL || 'http://127.0.0.1:18089/'
+        cwd: !!js process.cwd()
+        toolCallTimeoutMs: 180000
+        failOnStartupError: true

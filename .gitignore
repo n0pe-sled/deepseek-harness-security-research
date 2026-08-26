@@ -1,0 +1,51 @@
+# Private launch configuration and credentials
+.env
+.env.*
+!.env.example
+*.pem
+*.pfx
+*.p12
+*.key
+*.kdbx
+
+# Persistent DSH state and campaign worktrees
+runtime/
+campaigns/
+artifacts/
+third_party/
+
+# Research output and tool databases
+analysis/
+captures/
+decompiled/
+*.db
+*.db-*
+*.sqlite
+*.sqlite-*
+*.pcap
+*.pcapng
+*.dmp
+*.core
+
+# Collected binaries and release archives
+*.class
+*.jar
+*.war
+*.ear
+*.dll
+*.exe
+*.sys
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+
+# Local development output
+node_modules/
+dist/
+build/
+coverage/
+*.log
+.DS_Store
+.idea/
+.vscode/

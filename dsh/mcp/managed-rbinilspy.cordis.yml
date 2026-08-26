@@ -1,0 +1,16 @@
+# Token-efficient ILSpy backend. Build rbinilspy and set RBINILSPY_PATH.
+- insert:
+    - id: security-mcp-rbinilspy
+      name: '@deepseek-ai/dsh-mcp-client'
+      config:
+        serverName: rbinilspy
+        transport: stdio
+        command: !!js process.env.RBINILSPY_PATH
+        args: []
+        env:
+          RBM_CACHE_DIR: !!js process.env.RBM_CACHE_DIR || ''
+          RBM_ILSPY_WORKER: !!js process.env.RBM_ILSPY_WORKER || ''
+          RBM_ILSPY_CMD: !!js process.env.RBM_ILSPY_CMD || 'ilspycmd'
+        cwd: !!js process.cwd()
+        toolCallTimeoutMs: 120000
+        failOnStartupError: true

@@ -1,0 +1,17 @@
+# Official Bad Sector Labs Ludus MCP. Fully hands-free: call_ludus_api may use
+# every API operation granted to the key, including deploy/delete/configuration.
+# Keep the key in the launch environment, never in this file.
+- insert:
+    - id: security-mcp-ludus
+      name: '@deepseek-ai/dsh-mcp-client'
+      config:
+        serverName: ludus
+        transport: stdio
+        command: npx
+        args: !!js ['-y', process.env.DSH_LUDUS_MCP_SPEC || '@badsectorlabs/ludus-mcp@0.2.0']
+        env:
+          LUDUS_URL: !!js process.env.LUDUS_URL || ''
+          LUDUS_API_KEY: !!js process.env.LUDUS_API_KEY || ''
+        cwd: !!js process.cwd()
+        toolCallTimeoutMs: 180000
+        failOnStartupError: true

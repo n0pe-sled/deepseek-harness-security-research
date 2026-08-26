@@ -1,0 +1,19 @@
+# Composite static/dynamic binary server using Ghidra, x64dbg, WinDbg, and
+# ILSpyCmd. Clone Sarks0/binary-mcp and set DSH_BINARY_MCP_DIR. Use exact copied
+# artifacts/databases; the role contracts prohibit external sample submission.
+- insert:
+    - id: security-mcp-binary-analysis
+      name: '@deepseek-ai/dsh-mcp-client'
+      config:
+        serverName: binary_analysis
+        transport: stdio
+        command: uv
+        args: !!js ['--directory', process.env.DSH_BINARY_MCP_DIR, 'run', 'python', '-m', 'src.server']
+        env:
+          GHIDRA_HOME: !!js process.env.GHIDRA_HOME || ''
+          X64DBG_PATH: !!js process.env.X64DBG_PATH || ''
+          WINDBG_PATH: !!js process.env.WINDBG_PATH || ''
+          WINDBG_MODE: !!js process.env.WINDBG_MODE || 'user'
+        cwd: !!js process.cwd()
+        toolCallTimeoutMs: 180000
+        failOnStartupError: true

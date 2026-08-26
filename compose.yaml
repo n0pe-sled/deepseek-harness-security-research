@@ -1,0 +1,64 @@
+services:
+  security-research:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      args:
+        DSH_SPEC: ${DSH_SPEC:-@deepseek-ai/dsh@latest}
+        GHIDRA_MCP_REF: ${GHIDRA_MCP_REF:-6f7e7e8988e1efde5dd23372df71fe05c115722e}
+    image: deepseek-security-research:local
+    init: true
+    working_dir: /workspace
+    network_mode: host
+    environment:
+      DSH_HOME: /state/dsh
+      DSH_PORT: ${DSH_PORT:-3080}
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      DSH_TRUSTED_HOST: ${DSH_TRUSTED_HOST:-localhost:3080}
+      ENABLE_LUDUS_MCP: ${ENABLE_LUDUS_MCP:-0}
+      LUDUS_URL: ${LUDUS_URL:-}
+      LUDUS_API_KEY: ${LUDUS_API_KEY:-}
+      DSH_LUDUS_MCP_SPEC: ${DSH_LUDUS_MCP_SPEC:-@badsectorlabs/ludus-mcp@0.2.0}
+      ENABLE_JAVA_MCP: ${ENABLE_JAVA_MCP:-0}
+      JD_MCP_DUO_PATH: /opt/jd-mcp-duo/bin/jd-mcp-duo
+      ENABLE_GHIDRA_MCP: ${ENABLE_GHIDRA_MCP:-0}
+      GHIDRA_MCP_URL: ${GHIDRA_MCP_URL:-http://127.0.0.1:18089/}
+    volumes:
+      - ${CAMPAIGN_DIR:-./runtime/campaign}:/workspace
+      - ${DSH_STATE_DIR:-./runtime/dsh}:/state/dsh
+      - ${JD_MCP_DUO_DIR:-./runtime/jd-mcp-duo}:/opt/jd-mcp-duo:ro
+    restart: unless-stopped
+    healthcheck:
+      test: [CMD, curl, -fsS, "http://127.0.0.1:${DSH_PORT:-3080}/"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  # The small stdio bridge runs in security-research; the actual parser,
+  # analysis database, and Java/Ghidra runtime stay isolated here.
+  ghidra-headless:
+    profiles: [native]
+    build:
+      context: https://github.com/bethington/ghidra-mcp.git#${GHIDRA_MCP_REF:-6f7e7e8988e1efde5dd23372df71fe05c115722e}
+      dockerfile: docker/Dockerfile
+    image: ghidra-mcp-headless:${GHIDRA_MCP_REF:-6f7e7e8988e1efde5dd23372df71fe05c115722e}
+    init: true
+    ports:
+      - 127.0.0.1:18089:8089
+    environment:
+      GHIDRA_MCP_PORT: 8089
+      GHIDRA_MCP_BIND_ADDRESS: 0.0.0.0
+      GHIDRA_MCP_FILE_ROOT: /workspace
+      GHIDRA_MCP_ALLOW_SCRIPTS: 0
+      JAVA_OPTS: ${GHIDRA_JAVA_OPTS:--Xmx4g -XX:+UseG1GC}
+    volumes:
+      - ${CAMPAIGN_DIR:-./runtime/campaign}:/workspace:ro
+      - ghidra-data:/data
+      - ghidra-projects:/projects
+    restart: unless-stopped
+
+volumes:
+  ghidra-data:
+  ghidra-projects:

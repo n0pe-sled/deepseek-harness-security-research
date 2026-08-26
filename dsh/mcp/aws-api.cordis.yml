@@ -1,0 +1,17 @@
+# Optional AWS Labs API MCP. Keep AWS CLI available as the deterministic fallback.
+# Pin DSH_AWS_API_MCP_SPEC to a reviewed release rather than the default.
+- insert:
+    - id: security-mcp-aws-api
+      name: '@deepseek-ai/dsh-mcp-client'
+      config:
+        serverName: aws_api
+        transport: stdio
+        command: uvx
+        args: !!js [process.env.DSH_AWS_API_MCP_SPEC || 'awslabs.aws-api-mcp-server@latest']
+        env:
+          AWS_PROFILE: !!js process.env.AWS_PROFILE || ''
+          AWS_REGION: !!js process.env.AWS_REGION || ''
+          FASTMCP_LOG_LEVEL: ERROR
+        cwd: !!js process.cwd()
+        toolCallTimeoutMs: 180000
+        failOnStartupError: true
