@@ -9,15 +9,15 @@
 *.kdbx
 
 # Persistent DSH state and campaign worktrees
-runtime/
-campaigns/
-artifacts/
-third_party/
+/runtime/
+/campaigns/
+/artifacts/
+/third_party/
 
 # Research output and tool databases
-analysis/
-captures/
-decompiled/
+/analysis/
+/captures/
+/decompiled/
 *.db
 *.db-*
 *.sqlite

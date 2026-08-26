@@ -26,7 +26,11 @@ for skill in "$framework_root"/skills/*/SKILL.md; do
 done
 
 for contract in task-packet worker-report candidate experiment chain; do
-  test -f "$framework_root/project-template/analysis/research/contracts/$contract.md"
+  contract_path="$framework_root/project-template/analysis/research/contracts/$contract.md"
+  if test ! -f "$contract_path"; then
+    echo "validation failed: campaign template is missing $contract_path" >&2
+    exit 1
+  fi
 done
 
 test -f "$framework_root/dsh/mcp/ludus.cordis.yml"

@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "snapshot_id": null,
+  "target_id": null,
+  "target_role": null,
+  "environment_kind": null,
+  "collected_at_utc": null,
+  "service_epoch": null,
+  "artifacts": [],
+  "loaded_modules": [],
+  "notes": "Replace nulls only with observed values. Never invent identifiers."
+}

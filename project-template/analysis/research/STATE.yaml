@@ -1,0 +1,13 @@
+schema_version: 1
+campaign_id: CHANGE_ME
+objective: CHANGE_ME
+status: baseline-required
+active_snapshot_id: null
+active_target_id: null
+active_service_epoch: null
+open_gate: establish an immutable current-target baseline
+strongest_proven_capability: none
+active_task_packet: null
+active_worker_role: null
+blocked_families: []
+next_action: delegate one infrastructure worker for a read-only baseline refresh
