@@ -72,7 +72,7 @@ LABEL org.opencontainers.image.source="${DSH_SOURCE_URL}" \
       org.deepseek-harness.skills.revision="${DSH_SKILLS_SOURCE_REF}"
 
 RUN apt-get update \
-    && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ca-certificates curl git openssh-client python3 python3-venv ripgrep \
+    && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ca-certificates curl git openssh-client python3 python3-venv ripgrep socat \
     && npm install --global pnpm@11.7.0 \
     && python3 -m venv /opt/ghidra-mcp-bridge \
     && /opt/ghidra-mcp-bridge/bin/pip install --no-cache-dir "git+https://github.com/bethington/ghidra-mcp.git@${GHIDRA_MCP_REF}" \

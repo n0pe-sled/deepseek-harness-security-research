@@ -42,6 +42,8 @@ rg -q 'command: /opt/ghidra-mcp-bridge/bin/bridge-mcp-ghidra' "$framework_root/d
 rg -q 'ghidra-headless:' "$framework_root/compose.yaml"
 rg -q 'GHIDRA_MCP_FILE_ROOT: /workspace' "$framework_root/compose.yaml"
 rg -q 'GHIDRA_MCP_ALLOW_SCRIPTS: 0' "$framework_root/compose.yaml"
+rg -Fq '127.0.0.1:${DSH_PORT:-3080}:${DSH_PORT:-3080}' "$framework_root/compose.yaml"
+rg -q 'socat.*TCP-LISTEN:' "$framework_root/docker/entrypoint.sh"
 rg -q 'pnpm --dir /opt/deepseek-harness dsh' "$framework_root/docker/entrypoint.sh"
 rg -q 'n0pe-sled/deepseek-harness.git' "$framework_root/docker/Dockerfile"
 rg -q 'n0pe-sled/deepseek-harness-plugins.git' "$framework_root/docker/Dockerfile"

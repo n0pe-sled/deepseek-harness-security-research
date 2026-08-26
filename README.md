@@ -81,10 +81,10 @@ docker compose up --build
 
 An empty `CAMPAIGN_DIR` is initialized from the generic project template.
 DSH state and the campaign are bind-mounted, so
-container replacement does not lose evidence. The container uses host
-networking because DSH deliberately accepts only loopback binds; the UI remains
-local at `http://127.0.0.1:3080`. Host networking also preserves private Ludus
-range routes. The host Docker socket is not mounted.
+container replacement does not lose evidence. DSH stays bound to the container
+loopback and a small in-container TCP proxy publishes only the selected host
+loopback port. The UI remains local at `http://127.0.0.1:3080` (or
+`DSH_PORT`). The host Docker socket is not mounted.
 
 For native/JNI analysis, set `ENABLE_GHIDRA_MCP=1` and start the optional,
 heavyweight Ghidra engine too:

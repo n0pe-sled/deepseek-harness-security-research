@@ -14,11 +14,13 @@ services:
     image: deepseek-security-research:local
     init: true
     working_dir: /workspace
-    network_mode: host
+    ports:
+      - 127.0.0.1:${DSH_PORT:-3080}:${DSH_PORT:-3080}
     environment:
       DSH_HOME: /state/dsh
       DSH_AGENTS_HOME: /state/agents
       DSH_PORT: ${DSH_PORT:-3080}
+      DSH_INTERNAL_PORT: 39080
       DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
       OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
       DSH_TRUSTED_HOST: ${DSH_TRUSTED_HOST:-}
@@ -29,7 +31,7 @@ services:
       ENABLE_JAVA_MCP: ${ENABLE_JAVA_MCP:-0}
       JD_MCP_DUO_PATH: /opt/jd-mcp-duo/bin/jd-mcp-duo
       ENABLE_GHIDRA_MCP: ${ENABLE_GHIDRA_MCP:-0}
-      GHIDRA_MCP_URL: ${GHIDRA_MCP_URL:-http://127.0.0.1:18089/}
+      GHIDRA_MCP_URL: ${GHIDRA_MCP_URL:-http://ghidra-headless:8089/}
     volumes:
       - ${CAMPAIGN_DIR:-./runtime/campaign}:/workspace
       - ${DSH_STATE_DIR:-./runtime/dsh}:/state/dsh

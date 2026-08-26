@@ -5,6 +5,7 @@ dsh_root=${DSH_HOME:-/state/dsh}
 agents_root=${DSH_AGENTS_HOME:-/state/agents}
 campaign_root=/workspace
 trusted_host=${DSH_TRUSTED_HOST:-localhost:${DSH_PORT:-3080}}
+internal_port=${DSH_INTERNAL_PORT:-39080}
 
 mkdir -p "$dsh_root/.agent-presets" "$dsh_root/skills" "$agents_root/skills" "$campaign_root"
 
@@ -58,12 +59,15 @@ if test "${ENABLE_JAVA_MCP:-0}" = 1; then
 fi
 
 if test "${ENABLE_GHIDRA_MCP:-0}" = 1; then
-  if ! curl -fsS "${GHIDRA_MCP_URL:-http://127.0.0.1:18089/}check_connection" >/dev/null; then
+  if ! curl -fsS "${GHIDRA_MCP_URL:-http://ghidra-headless:8089/}check_connection" >/dev/null; then
     echo "ENABLE_GHIDRA_MCP=1 requires the ghidra-headless service (--profile native)" >&2
     exit 2
   fi
   set -- "$@" --patch /opt/framework/dsh/mcp/native-ghidra.cordis.yml
 fi
 
-set -- "$@" -- --no-open --host 127.0.0.1 --port "${DSH_PORT:-3080}" --trusted-host "$trusted_host"
+socat "TCP-LISTEN:${DSH_PORT:-3080},fork,reuseaddr,bind=0.0.0.0" "TCP:127.0.0.1:$internal_port" &
+echo "dsh Docker host endpoint: http://127.0.0.1:${DSH_PORT:-3080}"
+
+set -- "$@" -- --no-open --host 127.0.0.1 --port "$internal_port" --trusted-host "$trusted_host"
 exec "$@"
