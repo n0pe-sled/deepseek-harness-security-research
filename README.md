@@ -69,6 +69,11 @@ System Prompt Editor for optional machine-level additions. The campaign
 `AGENTS.md` remains authoritative; do not put target-specific facts into the
 global prompt editor.
 
+Set `ENABLE_RTX_SPARK=1` plus the private `RTX_SPARK_BASE_URL` and
+`RTX_SPARK_API_KEY` in `.env` to register the bundled OpenAI-compatible custom
+route. Its display name, model id/name, and context window are also overridable
+from `.env`; the default capacity is 1,048,576 tokens.
+
 ## Docker Compose
 
 Copy `.env.example` to `.env`, fill model/Ludus variables, and run from

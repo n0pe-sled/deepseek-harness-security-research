@@ -38,6 +38,14 @@ done
 
 set -- pnpm --dir /opt/deepseek-harness dsh --profile web --patch /opt/framework/dsh/security-research-default.cordis.patch.yml
 
+if test "${ENABLE_RTX_SPARK:-0}" = 1; then
+  if test -z "${RTX_SPARK_BASE_URL:-}"; then
+    echo "ENABLE_RTX_SPARK=1 requires RTX_SPARK_BASE_URL" >&2
+    exit 2
+  fi
+  set -- "$@" --patch /opt/framework/dsh/models/rtx-spark.cordis.yml
+fi
+
 if test "${ENABLE_LUDUS_MCP:-0}" = 1; then
   if test -z "${LUDUS_URL:-}"; then
     echo "ENABLE_LUDUS_MCP=1 requires LUDUS_URL in the container environment" >&2

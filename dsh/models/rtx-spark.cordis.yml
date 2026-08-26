@@ -1,0 +1,23 @@
+# Optional operator-supplied OpenAI-compatible model route. Credential values
+# remain in the launch environment; apiKeyEnv is only the reference name.
+- id: llm-pi-ai
+  name: '@deepseek-ai/dsh-llm-pi-ai'
+  config:
+    providers:
+      rtx-spark:
+        displayName: !!js process.env.RTX_SPARK_DISPLAY_NAME || 'RTX-Spark'
+        apiKeyEnv: RTX_SPARK_API_KEY
+        api: openai-completions
+        baseURL: !!js process.env.RTX_SPARK_BASE_URL
+        compat:
+          supportsDeveloperRole: false
+          maxTokensField: max_tokens
+        models:
+          - id: !!js process.env.RTX_SPARK_MODEL_ID || 'deepseek-v4-flash-0731'
+            name: !!js process.env.RTX_SPARK_MODEL_NAME || 'DeepSeek V4 Flash 0731'
+            contextWindow: !!js Number(process.env.RTX_SPARK_CONTEXT_WINDOW || 1048576)
+            reasoningEfforts:
+              low: low
+              medium: medium
+              high: high
+              max: max
