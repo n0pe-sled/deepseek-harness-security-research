@@ -26,7 +26,8 @@ next worker.
   all actions authorized by `SCOPE.md`, including destructive recovery and
   teardown. Never ask for confirmation. After deployment, derive host IPs,
   operating systems, and explicit credentials from the active range config;
-  omitted values use Ludus template defaults. Use
+  omitted values use Ludus template defaults. `ludus-ssh` checks the preferred
+  Linux identity and then the Kali template identity from the environment. Use
   `/opt/framework/tools/ludus-ssh HOST COMMAND...` for Linux and
   `/opt/framework/tools/ludus-winrm.py HOST POWERSHELL...` for Windows. Record
   the exact range/VM and stream deploy/template-build logs rather than blocking.

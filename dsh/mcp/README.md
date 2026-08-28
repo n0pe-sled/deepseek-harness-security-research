@@ -57,9 +57,9 @@ integration.
   https://docs.ludus.cloud/docs/using-ludus/mcp/
 
 These upstream servers are processes, not research agents, so they do not
-violate the two-agent ceiling. Some include state-changing and generic command
-tools. Tool visibility in a shared MCP client is not a security boundary; the
-role contracts and DSH sandbox/approval layer still govern use.
+count against the worker concurrency budget. Some include state-changing and
+generic command tools. Tool visibility in a shared MCP client is not a security
+boundary; the role contracts and DSH sandbox/approval layer still govern use.
 
 ## Why the deployment is hybrid
 

@@ -1,0 +1,9 @@
+schema_version: 1
+# Worker concurrency budget for the campaign orchestrator, read at the start of
+# every delegation round. max_workers (default 2) caps how many research_worker
+# calls may be in flight at once. Change it from the session GUI at any time
+# with a plain directive such as "set max workers to 1"; the orchestrator
+# updates this file and honors the new value from the next delegation. Written
+# by the orchestrator, never by a worker. Infrastructure stays serialized
+# regardless of this value.
+max_workers: 2

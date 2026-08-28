@@ -12,30 +12,94 @@ case "$host" in
   ''|*[!A-Za-z0-9._-]*) echo "ludus-ssh: invalid host" >&2; exit 2 ;;
 esac
 
-ssh_user=${LUDUS_SSH_USER:-debian}
+preferred_user=${LUDUS_SSH_USER:-debian}
+preferred_password=${LUDUS_SSH_PASSWORD:-debian}
+kali_user=${LUDUS_KALI_SSH_USER:-kali}
+kali_password=${LUDUS_KALI_SSH_PASSWORD:-kali}
 known_hosts=/state/dsh/ssh/known_hosts
 mkdir -p /state/dsh/ssh
 chmod 700 /state/dsh/ssh
+
+selected_auth=
+selected_label=
+selected_user=
+selected_secret=
+
+try_key() {
+  candidate_label=$1
+  candidate_user=$2
+  candidate_key=$3
+  if ssh -i "$candidate_key" -o BatchMode=yes \
+      -o StrictHostKeyChecking=accept-new -o UserKnownHostsFile="$known_hosts" \
+      -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=2 \
+      "$candidate_user@$host" true </dev/null >/dev/null 2>&1; then
+    selected_auth=key
+    selected_label=$candidate_label
+    selected_user=$candidate_user
+    selected_secret=$candidate_key
+    return 0
+  fi
+  return 1
+}
+
+try_password() {
+  candidate_label=$1
+  candidate_user=$2
+  candidate_password=$3
+  if SSHPASS=$candidate_password sshpass -e ssh \
+      -o PreferredAuthentications=password,keyboard-interactive \
+      -o PubkeyAuthentication=no -o StrictHostKeyChecking=accept-new \
+      -o UserKnownHostsFile="$known_hosts" -o ConnectTimeout=15 \
+      -o ServerAliveInterval=15 -o ServerAliveCountMax=2 \
+      "$candidate_user@$host" true </dev/null >/dev/null 2>&1; then
+    selected_auth=password
+    selected_label=$candidate_label
+    selected_user=$candidate_user
+    selected_secret=$candidate_password
+    return 0
+  fi
+  return 1
+}
 
 if test -n "${LUDUS_SSH_KEY_PATH:-}"; then
   if test ! -r "$LUDUS_SSH_KEY_PATH"; then
     echo "ludus-ssh: LUDUS_SSH_KEY_PATH is not readable in the container" >&2
     exit 2
   fi
-  set -- ssh -i "$LUDUS_SSH_KEY_PATH" -o BatchMode=yes \
-    -o StrictHostKeyChecking=accept-new -o UserKnownHostsFile="$known_hosts" \
-    -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=2 \
-    "$ssh_user@$host" "$@"
-elif test -n "${LUDUS_SSH_PASSWORD:-}"; then
-  SSHPASS=$LUDUS_SSH_PASSWORD
-  export SSHPASS
-  set -- sshpass -e ssh -o StrictHostKeyChecking=accept-new \
-    -o UserKnownHostsFile="$known_hosts" -o ConnectTimeout=15 \
-    -o ServerAliveInterval=15 -o ServerAliveCountMax=2 "$ssh_user@$host" "$@"
-else
-  set -- ssh -o BatchMode=yes -o StrictHostKeyChecking=accept-new \
-    -o UserKnownHostsFile="$known_hosts" -o ConnectTimeout=15 \
-    -o ServerAliveInterval=15 -o ServerAliveCountMax=2 "$ssh_user@$host" "$@"
+  try_key configured-key "$preferred_user" "$LUDUS_SSH_KEY_PATH" || true
 fi
 
+if test -z "$selected_auth" && test -n "$preferred_user" && test -n "$preferred_password"; then
+  try_password configured "$preferred_user" "$preferred_password" || true
+fi
+
+if test -z "$selected_auth" && test -n "$kali_user" && test -n "$kali_password" \
+    && { test "$preferred_user" != "$kali_user" || test "$preferred_password" != "$kali_password"; }; then
+  try_password kali-template "$kali_user" "$kali_password" || true
+fi
+
+case "$selected_auth" in
+  key)
+    set -- ssh -i "$selected_secret" -o BatchMode=yes \
+      -o StrictHostKeyChecking=accept-new -o UserKnownHostsFile="$known_hosts" \
+      -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=2 \
+      "$selected_user@$host" "$@"
+    ;;
+  password)
+    SSHPASS=$selected_secret
+    export SSHPASS
+    set -- sshpass -e ssh \
+      -o PreferredAuthentications=password,keyboard-interactive \
+      -o PubkeyAuthentication=no -o StrictHostKeyChecking=accept-new \
+      -o UserKnownHostsFile="$known_hosts" -o ConnectTimeout=15 \
+      -o ServerAliveInterval=15 -o ServerAliveCountMax=2 \
+      "$selected_user@$host" "$@"
+    ;;
+  *)
+    echo "ludus-ssh: no configured Linux identity authenticated" >&2
+    exit 1
+    ;;
+esac
+
+echo "ssh_auth=$selected_label" >&2
 exec "$@"

@@ -1,3 +1,5 @@
+name: dsh-${RESEARCH_TARGET:?Set RESEARCH_TARGET in .env}
+
 services:
   network-anchor:
     image: node:22-bookworm-slim
@@ -17,7 +19,7 @@ services:
         DSH_PLUGINS_SOURCE_URL: ${DSH_PLUGINS_SOURCE_URL:-https://github.com/n0pe-sled/deepseek-harness-plugins.git}
         DSH_PLUGINS_SOURCE_REF: ${DSH_PLUGINS_SOURCE_REF:-530b595efdf787c97474c4d7eee8ee8caa96d6f2}
         DSH_SKILLS_SOURCE_URL: ${DSH_SKILLS_SOURCE_URL:-https://github.com/n0pe-sled/deepseek-harness-skills.git}
-        DSH_SKILLS_SOURCE_REF: ${DSH_SKILLS_SOURCE_REF:-ae9880bfc478b30a48e5855385e08ea05bcd5108}
+        DSH_SKILLS_SOURCE_REF: ${DSH_SKILLS_SOURCE_REF:-a61a51a4af6d1e4868cc9b90625dc78701c0a160}
         GHIDRA_MCP_REF: ${GHIDRA_MCP_REF:-6f7e7e8988e1efde5dd23372df71fe05c115722e}
         JD_MCP_DUO_VERSION: ${JD_MCP_DUO_VERSION:-v4.2.5.4}
         JD_MCP_DUO_SHA256: ${JD_MCP_DUO_SHA256:-a68762013ca9375b72d7021a5732dba3743de67f7c25b1834f3579f00672ff3f}
@@ -51,6 +53,8 @@ services:
       LUDUS_SSH_USER: ${LUDUS_SSH_USER:-debian}
       LUDUS_SSH_PASSWORD: ${LUDUS_SSH_PASSWORD:-debian}
       LUDUS_SSH_KEY_PATH: ${LUDUS_SSH_KEY_PATH:-}
+      LUDUS_KALI_SSH_USER: ${LUDUS_KALI_SSH_USER:-kali}
+      LUDUS_KALI_SSH_PASSWORD: ${LUDUS_KALI_SSH_PASSWORD:-kali}
       LUDUS_WINDOWS_DOMAIN: ${LUDUS_WINDOWS_DOMAIN:-LUDUS}
       LUDUS_WINDOWS_USER: ${LUDUS_WINDOWS_USER:-}
       LUDUS_WINDOWS_PASSWORD: ${LUDUS_WINDOWS_PASSWORD:-}
@@ -65,10 +69,10 @@ services:
       GHIDRA_MCP_URL: http://127.0.0.1:8089/
       ENABLE_WIRESHARK_MCP: ${ENABLE_WIRESHARK_MCP:-1}
     volumes:
-      - ${CAMPAIGN_DIR:-./runtime/campaign}:/workspace
-      - ${DSH_STATE_DIR:-./runtime/dsh}:/state/dsh
-      - ${DSH_AGENTS_STATE_DIR:-./runtime/agents}:/state/agents
-      - ${LUDUS_SSH_DIR:-./runtime/ludus-ssh}:/run/ludus-ssh:ro
+      - ${RESEARCH_WORK_ROOT:?Set RESEARCH_WORK_ROOT in .env}/${RESEARCH_TARGET}:/workspace
+      - ${RESEARCH_WORK_ROOT:?Set RESEARCH_WORK_ROOT in .env}/.session-state/${RESEARCH_TARGET}/dsh:/state/dsh
+      - ${RESEARCH_WORK_ROOT:?Set RESEARCH_WORK_ROOT in .env}/.session-state/${RESEARCH_TARGET}/agents:/state/agents
+      - ${RESEARCH_WORK_ROOT:?Set RESEARCH_WORK_ROOT in .env}/.session-state/${RESEARCH_TARGET}/ludus-ssh:/run/ludus-ssh:ro
     cap_add:
       - NET_ADMIN
     devices:
@@ -104,11 +108,7 @@ services:
       GHIDRA_MCP_ALLOW_SCRIPTS: 0
       JAVA_OPTS: ${GHIDRA_JAVA_OPTS:--Xmx4g -XX:+UseG1GC}
     volumes:
-      - ${CAMPAIGN_DIR:-./runtime/campaign}:/workspace:ro
-      - ghidra-data:/data
-      - ghidra-projects:/projects
+      - ${RESEARCH_WORK_ROOT:?Set RESEARCH_WORK_ROOT in .env}/${RESEARCH_TARGET}:/workspace:ro
+      - ${RESEARCH_WORK_ROOT:?Set RESEARCH_WORK_ROOT in .env}/.session-state/${RESEARCH_TARGET}/ghidra-data:/data
+      - ${RESEARCH_WORK_ROOT:?Set RESEARCH_WORK_ROOT in .env}/.session-state/${RESEARCH_TARGET}/ghidra-projects:/projects
     restart: unless-stopped
-
-volumes:
-  ghidra-data:
-  ghidra-projects:

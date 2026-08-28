@@ -24,8 +24,10 @@ FROM node:22-bookworm-slim AS customizations-builder
 
 ARG DSH_PLUGINS_SOURCE_URL=https://github.com/n0pe-sled/deepseek-harness-plugins.git
 ARG DSH_PLUGINS_SOURCE_REF=530b595efdf787c97474c4d7eee8ee8caa96d6f2
+# The skills repo is fetch-pinned; a61a51a must exist on the origin remote,
+# so push ~/Research/deepseek-harness-skills to GitHub before rebuilding.
 ARG DSH_SKILLS_SOURCE_URL=https://github.com/n0pe-sled/deepseek-harness-skills.git
-ARG DSH_SKILLS_SOURCE_REF=ae9880bfc478b30a48e5855385e08ea05bcd5108
+ARG DSH_SKILLS_SOURCE_REF=a61a51a4af6d1e4868cc9b90625dc78701c0a160
 
 RUN apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ca-certificates git \
@@ -67,7 +69,7 @@ ARG DSH_SOURCE_REF=b150a551b8d465e31e418e1b2eaf5e79bbb7d28e
 ARG DSH_PLUGINS_SOURCE_URL=https://github.com/n0pe-sled/deepseek-harness-plugins.git
 ARG DSH_PLUGINS_SOURCE_REF=530b595efdf787c97474c4d7eee8ee8caa96d6f2
 ARG DSH_SKILLS_SOURCE_URL=https://github.com/n0pe-sled/deepseek-harness-skills.git
-ARG DSH_SKILLS_SOURCE_REF=ae9880bfc478b30a48e5855385e08ea05bcd5108
+ARG DSH_SKILLS_SOURCE_REF=a61a51a4af6d1e4868cc9b90625dc78701c0a160
 
 LABEL org.opencontainers.image.source="${DSH_SOURCE_URL}" \
       org.opencontainers.image.revision="${DSH_SOURCE_REF}" \

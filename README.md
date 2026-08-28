@@ -18,9 +18,10 @@ persistent agent-skills root. This includes `unslop`, `skill-mcp-manager`, and
 The hard scheduling controls are in the supplied agent preset:
 
 - one `research_worker` delegation tool;
-- foreground, one-shot delegation with no background argument;
-- `maxDepth: 1`, so a root orchestrator can create one child and that child
-  cannot delegate;
+- `run_in_background` exposed so sibling workers can overlap in one assistant
+  message (one-shot background tasks collect through the jobs tool);
+- `maxDepth: 1`, so a root orchestrator can create direct workers and a worker
+  can never delegate;
 - no fork, workflow, Ralph, or other delegation tools.
 
 Automatic compaction is explicit: at 65% of the routed model's context window,
@@ -28,19 +29,38 @@ the agent summarizes older balanced history and retains the newest 15%
 verbatim. For a one-million-token route this means a roughly 650,000-token
 trigger and 150,000-token retained tail. Manual `/compact` remains available.
 
-Foreground execution blocks the orchestrator until the worker terminates. This
-gives a maximum of two agents in the campaign: orchestrator plus one worker.
-Separate root sessions remain an operator responsibility.
+### Worker concurrency
+
+Concurrency is a live setting, not a rebuild. `analysis/research/settings.yaml`
+carries `max_workers` (default 2), read by the orchestrator at the start of
+every delegation round. The orchestrator dispatches at most that many
+`research_worker` calls in flight and batches siblings in one message so the
+harness runs them in parallel. Infrastructure stays serialized regardless of
+the budget, because concurrent mutations of one target conflict; the budget
+applies to read-only discovery and simulation on independent surfaces.
+
+Change it on the fly from the session GUI: send the orchestrator a plain
+directive such as "set max workers to 2". It persists the value to
+`settings.yaml` and honors it from the next delegation. No restart, no rebuild,
+no preset edit. Raise the budget only when the extra workers operate on non-
+conflicting work; raising it for repeated mutations of the same range or target
+does not speed anything up and risks state races.
 
 ## Package layout
 
 - `project-template/AGENTS.md`: campaign controller and evidence gates.
 - `roles/`: bounded worker contracts passed in task packets.
-- `skills/`: role guides compatible with `deepseek-harness-skills`.
 - `dsh/agent-presets/`: importable DeepSeek agent preset.
 - `dsh/mcp/`: real upstream MCP configuration rows and adapter guidance.
 - `project-template/analysis/research/`: durable campaign state and schemas.
-- `tools/install.sh`: installer for the existing skills/plugins layout.
+- `tools/install.sh`: installer that links the skills-repo bundles into the
+  agent skills root and installs the security-research preset.
+
+Skills no longer ship inside this framework repo. They live in the canonical
+`n0pe-sled/deepseek-harness-skills` repo, grouped into `security-review-skills/`,
+`generic-skills/`, and `third-party-skills/`. Set `DSH_SKILLS_REPO` to its
+checkout; install.sh and the Docker image flatten every bundle flat into the
+agent skills root so dsh discovers them one level deep.
 
 ## Install
 
@@ -56,10 +76,12 @@ The installer never overwrites a skill or preset. `DSH_HOME`,
 `DSH_AGENTS_HOME`, `DSH_SKILLS_REPO`, and `DSH_PLUGINS_REPO` may be set for
 non-default layouts.
 
-Create a campaign by copying `project-template`, edit `SCOPE.md`, and start DSH
-with that directory as the session working directory. Pick the
-`Security Research (two-agent)` preset. Add MCP rows with your Skill & MCP
-Manager or pass one of the overlays documented under `dsh/mcp/`.
+Create a campaign by copying `project-template`, then invoke
+`$security-scope-interview` in that directory to work through `SCOPE.md` with
+the agent. Start DSH with the campaign directory as the session working
+directory and pick the `Security Research (campaign)` preset. Add MCP rows
+with your Skill & MCP Manager or pass one of the overlays documented under
+`dsh/mcp/`.
 
 Use one managed backend and, when needed, one native backend. Small models
 perform worse when overlapping decompilers return conflicting symbol models.
@@ -78,20 +100,31 @@ default model for newly created sessions.
 
 ## Docker Compose
 
-Copy `.env.example` to `.env`, fill model/Ludus variables, and run from
-the repository root:
+Copy `.env.example` to `.env`, fill model/Ludus variables, and launch with a
+filesystem-safe target id from the repository root:
 
 ```bash
 cp .env.example .env
-docker compose up --build
+./tools/session.sh target-name
 ```
 
-An empty `CAMPAIGN_DIR` is initialized from the generic project template.
-DSH state and the campaign are bind-mounted, so
-container replacement does not lose evidence. DSH stays bound to the container
-loopback and a small in-container TCP proxy publishes only the selected host
-loopback port. The UI remains local at `http://127.0.0.1:3080` (or
-`DSH_PORT`). The host Docker socket is not mounted.
+The campaign is written to
+`$RESEARCH_WORK_ROOT/$RESEARCH_TARGET`. Running `session.sh` against an
+existing research directory resumes it: the project template is seeded only
+into a genuinely empty directory (no-clobber), so no campaign artifact is ever
+overwritten. The startup log prints either `campaign: initialized new
+campaign` or `campaign: resumed existing campaign`. DSH, agent, Ludus SSH, and
+Ghidra state live under `$RESEARCH_WORK_ROOT/.session-state/$RESEARCH_TARGET`;
+because that persists across container replacement, the previous root session
+stays listed in the GUI and can be reopened to continue the effort from its
+disk state. Compose has no
+in-repository mount fallback and refuses an empty target. `session.sh` rejects
+path-like targets. The target also names the Compose project, so sessions do not
+share containers. Pass Compose commands after the target, such as
+`./tools/session.sh target-name down`. Container replacement does not lose
+evidence. DSH stays bound to the container loopback and a small in-container TCP
+proxy publishes only the selected host loopback port. The UI remains local at
+`http://127.0.0.1:3080` (or `DSH_PORT`). The host Docker socket is not mounted.
 
 The normal launch includes the pinned jd-mcp-duo JAR/JDK, Wireshark MCP/tshark,
 and the heavyweight Ghidra headless sidecar. Disable individual analyzers with

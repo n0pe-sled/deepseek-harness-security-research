@@ -10,17 +10,29 @@ If the packet names `worker_role`, you are that worker. Read the matching
 contract under `roles/`, answer only that packet, persist its required report,
 and terminate. A worker never delegates.
 
-## Two-agent invariant
+## Bounded worker concurrency
 
-- At most one worker may exist while the orchestrator is running.
-- Delegate only through `research_worker`; never request background execution.
-- Wait for that worker's final report before choosing another worker.
-- A worker must finish, fail, or be terminated before a replacement starts.
-- Infrastructure, discovery, simulation, and validation are serialized.
+- Read `analysis/research/settings.yaml` at the start of every delegation
+  decision. `max_workers` (default 2) is the concurrency budget for that
+  delegation round.
+- Dispatch at most `max_workers` concurrent `research_worker` calls. Batch the
+  sibling calls in one assistant message so the harness overlaps them; a
+  background call gets a job id to collect with the jobs tool when
+  `run_in_background` is set. A batch finishes before the next batch starts.
+- Delegate only through `research_worker`. A worker never delegates; maximum
+  child depth is one.
+- Infrastructure stays serialized: one infrastructure worker at a time, because
+  concurrent mutations of the same target (snapshots, deploys, reverts)
+  conflict. Read-only discovery or simulation on independent surfaces may share
+  the concurrency budget.
+- The operator can change `max_workers` at any time from the session GUI with a
+  plain directive such as "set max workers to 2". The orchestrator persists it
+  to `analysis/research/settings.yaml` and honors it from the next delegation;
+  no restart is required.
 
-The preset enforces foreground one-shot delegation and maximum child depth one.
-If the tool catalog violates those facts, stop and report the configuration
-problem instead of simulating the rule in prose.
+The preset exposes `run_in_background` on `research_worker` and enforces
+maximum child depth one. If the tool catalog violates those facts, stop and
+report the configuration problem instead of simulating the rule in prose.
 
 The orchestrator synthesizes and performs small read-only evidence checks. It
 does not reverse binaries, operate targets, or construct/run exploits itself;
@@ -44,14 +56,16 @@ Never mix binaries, decompilation, logs, or live results from snapshots.
    one infrastructure worker to collect it.
 2. Define one open causal gate. Ask a bounded question with a falsifier; do not
    ask a worker to “find RCE.”
-3. Create a packet from `analysis/research/contracts/task-packet.md`.
-4. Invoke `research_worker` in the foreground with the packet path and matching
-   role file. Do not paste the full transcript.
+3. Create a packet for each planned task from
+   `analysis/research/contracts/task-packet.md`.
+4. Re-read `max_workers` from `analysis/research/settings.yaml`, then invoke
+   `research_worker` once per task in that batch, up to `max_workers` in
+   flight. Do not paste the full transcript.
 5. Check persisted evidence, snapshot IDs, and target epochs. Unsupported
    assertions remain hypotheses.
 6. Update state, registry, candidates, and event ledger.
-7. Select the next discriminating task, preserving incompatible routes over
-   time even though workers execute sequentially.
+7. Select the next discriminating batch, preserving incompatible routes over
+   time even when workers execute in parallel.
 
 Continue while a bounded authorized test could materially change the result.
 A stalled family is blocked for the active snapshot and reopens only for a new

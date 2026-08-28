@@ -8,29 +8,38 @@ trusted_host=${DSH_TRUSTED_HOST:-localhost:${DSH_PORT:-3080}}
 internal_port=${DSH_INTERNAL_PORT:-39080}
 dsh_bin=/opt/framework/docker/dsh-launch.mjs
 
-mkdir -p "$dsh_root/.agent-presets" "$dsh_root/skills" "$agents_root/skills" "$campaign_root"
+mkdir -p "$dsh_root/.agent-presets" "$agents_root/skills" "$campaign_root"
 
 # This preset is framework-owned. Refresh it on every startup so routing and
 # concurrency fixes reach persistent profiles after an image upgrade.
 mkdir -p "$dsh_root/.agent-presets/security-research"
 cp -R /opt/framework/dsh/agent-presets/security-research/. "$dsh_root/.agent-presets/security-research/"
 
-for source in /opt/framework/skills/*; do
-  name=$(basename "$source")
-  if test ! -e "$dsh_root/skills/$name"; then
-    cp -R "$source" "$dsh_root/skills/$name"
-  fi
-done
+# Seed skills from the categorized skills repo into the flat agent root so
+# discovery finds each bundle one level deep by its name.
+if test -d /opt/deepseek-harness-skills; then
+  find /opt/deepseek-harness-skills -mindepth 2 -maxdepth 3 -name SKILL.md | sort | while read -r skill_file; do
+    name=$(basename "$(dirname "$skill_file")")
+    if test ! -e "$agents_root/skills/$name"; then
+      cp -R "$(dirname "$skill_file")" "$agents_root/skills/$name"
+    fi
+  done
+fi
 
-for source in /opt/deepseek-harness-skills/*; do
-  name=$(basename "$source")
-  if test -f "$source/SKILL.md" && test ! -e "$agents_root/skills/$name"; then
-    cp -R "$source" "$agents_root/skills/$name"
-  fi
-done
-
-if test ! -f "$campaign_root/SCOPE.md"; then
-  cp -R /opt/framework/project-template/. "$campaign_root/"
+# Campaign directory handling. An existing research directory is resumed,
+# never overwritten. The template is seeded only into a genuinely empty
+# directory, and even then with no-clobber. Any prior campaign artifact
+# (SCOPE.md, AGENTS.md, analysis/, roles/, .git) flips this to resume mode.
+if test -d "$campaign_root"; then
+  campaign_entries=$(find "$campaign_root" -mindepth 1 -maxdepth 1 -not -name '.DS_Store' | wc -l | tr -d ' ')
+else
+  campaign_entries=0
+fi
+if test "$campaign_entries" -eq 0; then
+  cp -R -n /opt/framework/project-template/. "$campaign_root/"
+  echo "campaign: initialized new campaign in $campaign_root from project-template"
+else
+  echo "campaign: resumed existing campaign in $campaign_root ($campaign_entries top-level entries); no template files written"
 fi
 
 for plugin in skill-mcp-manager system-prompt-editor web-search-searxng; do
@@ -38,7 +47,9 @@ for plugin in skill-mcp-manager system-prompt-editor web-search-searxng; do
     "/opt/deepseek-harness-plugins/$plugin" --offline >/dev/null
 done
 
-set -- pnpm --dir /opt/deepseek-harness exec node --import tsx/esm "$dsh_bin" --profile web --patch /opt/framework/dsh/security-research-default.cordis.patch.yml
+set -- pnpm --dir /opt/deepseek-harness exec node --import tsx/esm "$dsh_bin" --profile web \
+  --patch /opt/framework/dsh/security-research-default.cordis.patch.yml \
+  --patch /opt/framework/dsh/web-search-searxng.cordis.patch.yml
 
 if test "${ENABLE_RTX_SPARK:-0}" = 1; then
   if test -z "${RTX_SPARK_BASE_URL:-}"; then

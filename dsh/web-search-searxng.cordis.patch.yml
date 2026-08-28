@@ -1,0 +1,14 @@
+# Use the installed SEARXNG provider for every research chat. The agent preset
+# owns the model-facing web tool, so the host copy stays disabled.
+- id: web
+  name: '@deepseek-ai/dsh-web'
+  config:
+    searchProvider: searxng
+
+- id: web-search-deepseek
+  name: '@deepseek-ai/dsh-web-search-deepseek'
+  disabled: true
+
+- id: tool-web
+  name: '@deepseek-ai/dsh-tool-web'
+  disabled: true

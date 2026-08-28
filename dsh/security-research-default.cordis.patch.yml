@@ -1,4 +1,6 @@
-# Select the installed two-agent preset for every new session in this profile.
+# Select the installed security-research preset for every new session in this
+# profile. Worker concurrency is live-configurable per campaign via
+# analysis/research/settings.yaml (max_workers).
 - id: agent-presets
   config:
     default: security-research

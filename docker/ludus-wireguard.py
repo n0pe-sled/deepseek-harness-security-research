@@ -24,6 +24,12 @@ if mode == "host":
 if mode not in {"auto", "wireguard"}:
     fail("LUDUS_RANGE_CONNECT must be auto, wireguard, host, or api-only")
 
+if subprocess.run(
+    ["wg", "show", "ludus"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+).returncode == 0:
+    print("Ludus range connection: reusing the active WireGuard interface")
+    raise SystemExit(0)
+
 target = pathlib.Path("/run/ludus.conf")
 source = os.environ.get("LUDUS_WIREGUARD_CONFIG", "")
 if source:

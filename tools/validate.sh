@@ -7,24 +7,36 @@ preset="$framework_root/dsh/agent-presets/security-research/agent.cordis.yml"
 test -f "$preset"
 test "$(rg -c "name: '@deepseek-ai/dsh-tool-subagent'" "$preset")" -eq 1
 rg -q 'toolName: research_worker' "$preset"
-rg -q 'enableRunInBackground: false' "$preset"
+rg -q 'enableRunInBackground: true' "$preset"
 rg -q 'backgroundMode: one-shot' "$preset"
 rg -q 'maxDepth: 1' "$preset"
 rg -q "agentOptions:.*ENABLE_RTX_SPARK.*provider: 'rtx-spark'" "$preset"
 rg -q 'thresholdRatio: 0.65' "$preset"
 rg -q 'retainRatio: 0.15' "$preset"
 rg -q 'default: security-research' "$framework_root/dsh/security-research-default.cordis.patch.yml"
+test -f "$framework_root/dsh/web-search-searxng.cordis.patch.yml"
+rg -q 'searchProvider: searxng' "$framework_root/dsh/web-search-searxng.cordis.patch.yml"
+rg -q -U 'id: web-search-deepseek\n  name:.*\n  disabled: true' "$framework_root/dsh/web-search-searxng.cordis.patch.yml"
+rg -q 'web-search-searxng.cordis.patch.yml' "$framework_root/docker/entrypoint.sh"
+rg -q 'load unslop on the first step' "$preset"
 
 if rg -q 'dsh-tool-ralph|dsh-tool-workflow|subagent-fork' "$preset"; then
   echo "validation failed: forbidden concurrent delegation surface" >&2
   exit 1
 fi
 
-for skill in "$framework_root"/skills/*/SKILL.md; do
-  test -f "$skill"
-  rg -q '^name: [a-z0-9-]+$' "$skill"
-  rg -q '^description: .+' "$skill"
-done
+if test -d "$framework_root/skills"; then
+  echo "validation failed: skills/ was removed from this repo; skills now live in \$DSH_SKILLS_REPO" >&2
+  exit 1
+fi
+skills_root=${DSH_SKILLS_REPO:-"$HOME/deepseek-harness-skills"}
+if test -d "$skills_root"; then
+  for skill in $(find "$skills_root" -mindepth 2 -maxdepth 3 -name SKILL.md | sort); do
+    test -f "$skill"
+    rg -q '^name: [a-z0-9-]+$' "$skill"
+    rg -q '^description: .+' "$skill"
+  done
+fi
 
 for contract in task-packet worker-report candidate experiment chain; do
   contract_path="$framework_root/project-template/analysis/research/contracts/$contract.md"
@@ -33,6 +45,10 @@ for contract in task-packet worker-report candidate experiment chain; do
     exit 1
   fi
 done
+
+test -f "$framework_root/project-template/analysis/research/settings.yaml"
+rg -q '^max_workers: [0-9]+$' "$framework_root/project-template/analysis/research/settings.yaml"
+rg -q 'max_workers' "$framework_root/project-template/AGENTS.md"
 
 test -f "$framework_root/dsh/mcp/ludus.cordis.yml"
 rg -q '@badsectorlabs/ludus-mcp@0.2.0' "$framework_root/dsh/mcp/ludus.cordis.yml"
@@ -51,6 +67,19 @@ rg -q 'pywinrm==0.5.0' "$framework_root/docker/Dockerfile"
 rg -Fq 'PATH=/opt/java/openjdk/bin:$PATH' "$framework_root/docker/Dockerfile"
 test -f "$framework_root/tools/ludus-ssh"
 test -f "$framework_root/tools/ludus-winrm.py"
+rg -q 'LUDUS_KALI_SSH_USER=kali' "$framework_root/.env.example"
+rg -q 'LUDUS_KALI_SSH_PASSWORD=kali' "$framework_root/.env.example"
+rg -q 'LUDUS_KALI_SSH_USER.*kali' "$framework_root/compose.yaml"
+rg -q 'LUDUS_KALI_SSH_PASSWORD.*kali' "$framework_root/compose.yaml"
+rg -q 'try_password kali-template' "$framework_root/tools/ludus-ssh"
+rg -q 'RESEARCH_WORK_ROOT=.*ai-research-working' "$framework_root/.env.example"
+rg -q '^name: dsh-.*RESEARCH_TARGET:?.*Set RESEARCH_TARGET' "$framework_root/compose.yaml"
+test -x "$framework_root/tools/session.sh"
+rg -Fq '*[!a-z0-9_-]*)' "$framework_root/tools/session.sh"
+if rg -q '\./runtime|CAMPAIGN_DIR|DSH_STATE_DIR|DSH_AGENTS_STATE_DIR|LUDUS_SSH_DIR' "$framework_root/compose.yaml"; then
+  echo "validation failed: Compose has an in-repository output fallback" >&2
+  exit 1
+fi
 rg -q 'command: /opt/ghidra-mcp-bridge/bin/bridge-mcp-ghidra' "$framework_root/dsh/mcp/native-ghidra.cordis.yml"
 rg -q 'ghidra-headless:' "$framework_root/compose.yaml"
 rg -q '^FROM ghidra_source AS source$' "$framework_root/docker/Ghidra.Dockerfile"
