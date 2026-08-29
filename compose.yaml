@@ -112,3 +112,81 @@ services:
       - ${RESEARCH_WORK_ROOT:?Set RESEARCH_WORK_ROOT in .env}/.session-state/${RESEARCH_TARGET}/ghidra-data:/data
       - ${RESEARCH_WORK_ROOT:?Set RESEARCH_WORK_ROOT in .env}/.session-state/${RESEARCH_TARGET}/ghidra-projects:/projects
     restart: unless-stopped
+
+  # Containerized headless Burp (phase 1, feature/burp-container). Shares the
+  # loopback with DSH like ghidra-headless; reachable only there. Opt-in via
+  # --profile burp. Full Compose/startup wiring (health gating, MCP overlay,
+  # session preflight) is phase 4; this service is the runnable connectivity
+  # slice plus the phase 1 proof.
+  burp:
+    profiles: [burp]
+    build:
+      context: .
+      dockerfile: docker/Burp.Dockerfile
+      args:
+        BURP_VERSION: ${BURP_VERSION:-}
+        BURP_SHA256: ${BURP_SHA256:-}
+        BURP_DIST_URL: ${BURP_DIST_URL:-}
+    image: deepseek-burp:${BURP_VERSION:-local}
+    init: true
+    network_mode: service:network-anchor
+    depends_on:
+      - network-anchor
+      - burp-fixture
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /home/burp:size=64m,mode=0755
+      - /run:size=16m,mode=1777
+      - /tmp:size=256m,mode=1777
+    environment:
+      STATE_DIR: /state
+      BURP_VERSION: ${BURP_VERSION:-}
+      BURP_API_PORT: ${BURP_API_PORT:-1337}
+      BURP_PROXY_PORT: ${BURP_PROXY_PORT:-8080}
+      BURP_REST_USER: ${BURP_REST_USER:-}
+      BURP_REST_PASSWORD: ${BURP_REST_PASSWORD:-}
+      BURP_REQUIRE_LICENSE: ${BURP_REQUIRE_LICENSE:-0}
+      BURP_LICENSE_KEY: ${BURP_LICENSE_KEY:-}
+      BURP_TARGET_ALLOWLIST: ${BURP_TARGET_ALLOWLIST:-127.0.0.1:18000}
+      BURP_REST_ARGS: ${BURP_REST_ARGS:-}
+      FIXTURE_PORT: 18000
+    volumes:
+      - ${RESEARCH_WORK_ROOT:?Set RESEARCH_WORK_ROOT in .env}/${RESEARCH_TARGET}:/workspace:ro
+      - ${RESEARCH_WORK_ROOT:?Set RESEARCH_WORK_ROOT in .env}/.session-state/${RESEARCH_TARGET}/burp:/state
+      - ${RESEARCH_WORK_ROOT:?Set RESEARCH_WORK_ROOT in .env}/.session-state/${RESEARCH_TARGET}/burp/license:/run/license:ro
+    restart: unless-stopped
+    healthcheck:
+      test: [CMD, /app/burp-health.sh]
+      interval: 15s
+      timeout: 5s
+      retries: 20
+      start_period: 90s
+
+  # Phase 1 proof fixture: a tiny static target bound to the shared loopback.
+  # Exists so a proxied round-trip can be proven with no LAN exposure and no
+  # outbound network.
+  burp-fixture:
+    profiles: [burp]
+    image: node:22-bookworm-slim
+    init: true
+    network_mode: service:network-anchor
+    depends_on:
+      - network-anchor
+    environment:
+      FIXTURE_PORT: 18000
+    command:
+      - node
+      - -e
+      - >
+        let n = 0;
+        require('http').createServer((req, res) => {
+          n += 1;
+          res.setHeader('content-type', 'application/json');
+          res.end(JSON.stringify({ service: 'burp-fixture', count: n, path: req.url, ts: Date.now() }));
+        }).listen(process.env.FIXTURE_PORT || 18000, '127.0.0.1');
+    restart: unless-stopped
+

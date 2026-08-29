@@ -43,6 +43,8 @@
 # Local development output
 node_modules/
 dist/
+!burp/dist/
+!burp/dist/.gitkeep
 build/
 coverage/
 *.log
