@@ -144,6 +144,7 @@ services:
       - /tmp:size=256m,mode=1777
     environment:
       STATE_DIR: /state
+      HOME: /tmp
       BURP_VERSION: ${BURP_VERSION:-}
       BURP_API_PORT: ${BURP_API_PORT:-1337}
       BURP_PROXY_PORT: ${BURP_PROXY_PORT:-8080}
@@ -153,6 +154,7 @@ services:
       BURP_LICENSE_KEY: ${BURP_LICENSE_KEY:-}
       BURP_TARGET_ALLOWLIST: ${BURP_TARGET_ALLOWLIST:-127.0.0.1:18000}
       BURP_REST_ARGS: ${BURP_REST_ARGS:-}
+      BURP_JAVA_OPTS: ${BURP_JAVA_OPTS:--Xmx2g}
       FIXTURE_PORT: 18000
     volumes:
       - ${RESEARCH_WORK_ROOT:?Set RESEARCH_WORK_ROOT in .env}/${RESEARCH_TARGET}:/workspace:ro

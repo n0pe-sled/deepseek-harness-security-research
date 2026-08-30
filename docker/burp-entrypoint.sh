@@ -70,15 +70,11 @@ if [ -n "${BURP_PROJECT_FILE:-}" ]; then
 fi
 cmd="$cmd $BURP_REST_ARGS"
 
-cat > /tmp/burp-run.sh <<EOF
-#!/bin/sh
-exec $cmd
-EOF
-chmod +x /tmp/burp-run.sh
-
 burp_log "launching headless Burp REST API on 127.0.0.1:${BURP_API_PORT}"
 : > "$STATE_DIR/burp.log"
-/tmp/burp-run.sh >> "$STATE_DIR/burp.log" 2>&1 &
+# Launch via sh -c, not a script file in /tmp: docker mounts tmpfs with noexec,
+# so a direct exec of a generated script fails with permission denied.
+sh -c "exec $cmd" >> "$STATE_DIR/burp.log" 2>&1 &
 pid=$!
 
 cleanup() {

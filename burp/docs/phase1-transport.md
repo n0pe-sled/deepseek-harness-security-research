@@ -63,12 +63,39 @@ addresses, allowlist hash and count, workdir, and state. Later phases and the
 MCP tools key every operation to this descriptor and refuse stale or foreign
 session ids.
 
-## Phase 1 validation task
+## Phase 1 validation result (verified 2025.6.1, trial jar)
 
-The one open technical variable is whether the pinned Burp version exposes the
-native REST API flags (`--headless --rest-api --port`) and its exact endpoint
-paths (`/v0.1/proxy/history`, configurator endpoints). `BURP_REST_ARGS` exists
-so the operator can adjust the launch line without editing code. The
-`burp-proof.sh` script reports history/scope checks as warnings until those
-endpoints are confirmed against the pinned version, and the fixture counter
-provides the authoritative single-exchange assertion in the meantime.
+The native headless REST API is **not present** in current Burp Professional.
+Verified against the freely downloaded trial jar (`product=pro&type=Jar`,
+anonymous, SHA-256-pinned):
+
+- `java -jar burpsuite_pro.jar --help` lists every supported flag. There is no
+  `--headless`, `--rest-api`, or `--port`; those flags are reported as
+  "Unrecognized command-line argument".
+- `--version` reports `2025.6.1-39604 Burp Suite Professional`.
+- The jar contains no REST API module (no `net/portswigger/**/rest*` classes);
+  the launcher exits with `Could not start Burp: NullPointerException` when the
+  flags are passed.
+
+Consequences for the plan:
+
+1. "Download the trial each time" is pullable but does not get you automation.
+   Trial state and every control surface live in the GUI.
+2. The containerized automate path is therefore one of:
+   - **burp-rest-api extension under Xvfb** (community standard): run the Pro
+     jar on a virtual framebuffer, load the open-source burp-rest-api
+     extension (with `--developer-extension-class-name` or `--config-file`),
+     drive it through its own API on 127.0.0.1:8090. Keeps the no-host-port
+     and no-VNC-published properties; the display is virtual, not served.
+     Trial activation may still need a GUI interaction on first boot, which
+     is the open item to probe.
+   - **Burp Enterprise** for a native headless REST API and official container
+     (separate commercial product and license; not the Pro trial).
+3. `BURP_REST_ARGS` remains the escape hatch for version-specific flags. The
+   launch command and the proof's history/scope checks must be re-targeted to
+   whichever API surface survives the pivot.
+
+Also fixed in the same pass: the container's `/home/burp` tmpfs was
+root-owned, so the unprivileged JVM could not create its user preferences
+directory. `HOME=/tmp` is now set in the Compose environment (burp user owns
+/tmp on tmpfs), which removes the preferences failure.
