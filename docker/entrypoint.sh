@@ -42,9 +42,10 @@ else
   echo "campaign: resumed existing campaign in $campaign_root ($campaign_entries top-level entries); no template files written"
 fi
 
-for plugin in skill-mcp-manager system-prompt-editor web-search-searxng; do
+for plugin_dir in /opt/deepseek-harness-plugins/*; do
+  test -f "$plugin_dir/package.json" || continue
   pnpm --dir /opt/deepseek-harness exec node --import tsx/esm "$dsh_bin" plugin --profile web add \
-    "/opt/deepseek-harness-plugins/$plugin" --offline >/dev/null
+    "$plugin_dir" --offline
 done
 
 set -- pnpm --dir /opt/deepseek-harness exec node --import tsx/esm "$dsh_bin" --profile web \

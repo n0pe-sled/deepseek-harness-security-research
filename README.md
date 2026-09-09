@@ -10,10 +10,14 @@ The Docker image fetches the pinned revision of
 production artifacts from source, and launches that source checkout with
 `pnpm dsh`. It does not install the published `@deepseek-ai/dsh` package.
 The image also checks out pinned revisions of `n0pe-sled/deepseek-harness-plugins`
-and `n0pe-sled/deepseek-harness-skills`, rebuilds all custom plugins from
-source, registers them in the Web profile, and seeds the custom skills into the
-persistent agent-skills root. This includes `unslop`, `skill-mcp-manager`, and
-`system-prompt-editor`.
+and `n0pe-sled/deepseek-harness-skills`, validates the plugins' committed build
+artifacts, registers every package in the pinned plugin checkout in the Web
+profile, and seeds the custom skills into the persistent agent-skills root.
+Using the committed artifacts avoids resolving time-sensitive development
+dependencies during an image build. The current pin includes
+`clear-session-history`, `context-before-user`, `skill-mcp-manager`,
+`subscription-logins`, `system-prompt-editor`, and `web-search-searxng`; the
+seeded skills include `unslop`.
 
 The hard scheduling controls are in the supplied agent preset:
 

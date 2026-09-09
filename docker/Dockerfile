@@ -23,11 +23,11 @@ RUN pnpm --dir /opt/deepseek-harness install --frozen-lockfile \
 FROM node:22-bookworm-slim AS customizations-builder
 
 ARG DSH_PLUGINS_SOURCE_URL=https://github.com/n0pe-sled/deepseek-harness-plugins.git
-ARG DSH_PLUGINS_SOURCE_REF=530b595efdf787c97474c4d7eee8ee8caa96d6f2
-# The skills repo is fetch-pinned; a61a51a must exist on the origin remote,
-# so push ~/Research/deepseek-harness-skills to GitHub before rebuilding.
+ARG DSH_PLUGINS_SOURCE_REF=82f8facff67e77d9ce00eccb57e90bc3f62a1b65
+# The skills repo is fetch-pinned, so its revision must exist on the origin
+# remote before rebuilding.
 ARG DSH_SKILLS_SOURCE_URL=https://github.com/n0pe-sled/deepseek-harness-skills.git
-ARG DSH_SKILLS_SOURCE_REF=a61a51a4af6d1e4868cc9b90625dc78701c0a160
+ARG DSH_SKILLS_SOURCE_REF=ad6542be82d551e93d8809fd42260081222b2251
 
 RUN apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ca-certificates git \
@@ -48,13 +48,16 @@ RUN mkdir /opt/deepseek-harness-plugins \
     && git -C /opt/deepseek-harness-skills checkout --detach FETCH_HEAD \
     && test "$(git -C /opt/deepseek-harness-skills rev-parse HEAD)" = "${DSH_SKILLS_SOURCE_REF}"
 
-RUN pnpm --dir /opt/deepseek-harness-plugins/skill-mcp-manager install --frozen-lockfile \
-    && pnpm --dir /opt/deepseek-harness-plugins/skill-mcp-manager run build \
-    && pnpm --dir /opt/deepseek-harness-plugins/system-prompt-editor install --frozen-lockfile \
-    && pnpm --dir /opt/deepseek-harness-plugins/system-prompt-editor run build \
-    && pnpm --dir /opt/deepseek-harness-plugins/web-search-searxng install --frozen-lockfile \
-    && pnpm --dir /opt/deepseek-harness-plugins/web-search-searxng run build \
-    && rm -rf /opt/deepseek-harness-plugins/.git /opt/deepseek-harness-skills/.git
+RUN set -eu; \
+    for plugin_dir in /opt/deepseek-harness-plugins/*; do \
+      test -f "$plugin_dir/package.json" || continue; \
+      test -f "$plugin_dir/cordis.patch.yml"; \
+      test -f "$plugin_dir/lib/index.js"; \
+      if grep -q '"./client"' "$plugin_dir/package.json"; then \
+        test -f "$plugin_dir/lib/client.js"; \
+      fi; \
+    done; \
+    rm -rf /opt/deepseek-harness-plugins/.git /opt/deepseek-harness-skills/.git
 
 FROM eclipse-temurin:25-jdk-jammy AS java-runtime
 
@@ -67,9 +70,9 @@ ARG WIRESHARK_MCP_REF=2a8c009fb38723a9212e47d6156cc8a6b2f624c0
 ARG DSH_SOURCE_URL=https://github.com/n0pe-sled/deepseek-harness.git
 ARG DSH_SOURCE_REF=b150a551b8d465e31e418e1b2eaf5e79bbb7d28e
 ARG DSH_PLUGINS_SOURCE_URL=https://github.com/n0pe-sled/deepseek-harness-plugins.git
-ARG DSH_PLUGINS_SOURCE_REF=530b595efdf787c97474c4d7eee8ee8caa96d6f2
+ARG DSH_PLUGINS_SOURCE_REF=82f8facff67e77d9ce00eccb57e90bc3f62a1b65
 ARG DSH_SKILLS_SOURCE_URL=https://github.com/n0pe-sled/deepseek-harness-skills.git
-ARG DSH_SKILLS_SOURCE_REF=a61a51a4af6d1e4868cc9b90625dc78701c0a160
+ARG DSH_SKILLS_SOURCE_REF=ad6542be82d551e93d8809fd42260081222b2251
 
 LABEL org.opencontainers.image.source="${DSH_SOURCE_URL}" \
       org.opencontainers.image.revision="${DSH_SOURCE_REF}" \

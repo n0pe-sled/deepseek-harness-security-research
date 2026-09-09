@@ -92,7 +92,15 @@ rg -Fq "process.chdir(process.env.DSH_CAMPAIGN_ROOT ?? '/workspace')" "$framewor
 rg -q 'n0pe-sled/deepseek-harness.git' "$framework_root/docker/Dockerfile"
 rg -q 'n0pe-sled/deepseek-harness-plugins.git' "$framework_root/docker/Dockerfile"
 rg -q 'n0pe-sled/deepseek-harness-skills.git' "$framework_root/docker/Dockerfile"
-rg -q 'for plugin in skill-mcp-manager system-prompt-editor web-search-searxng' "$framework_root/docker/entrypoint.sh"
+rg -Fq 'for plugin_dir in /opt/deepseek-harness-plugins/*; do' "$framework_root/docker/entrypoint.sh"
+rg -Fq 'test -f "$plugin_dir/package.json" || continue' "$framework_root/docker/entrypoint.sh"
+rg -Fq 'for plugin_dir in /opt/deepseek-harness-plugins/*; do' "$framework_root/docker/Dockerfile"
+rg -Fq 'test -f "$plugin_dir/lib/index.js"' "$framework_root/docker/Dockerfile"
+rg -Fq 'test -f "$plugin_dir/lib/client.js"' "$framework_root/docker/Dockerfile"
+if rg -q 'pnpm --dir .*deepseek-harness-plugins.* (install|run build)' "$framework_root/docker/Dockerfile"; then
+  echo "validation failed: plugin dev dependencies must not be resolved during the image build" >&2
+  exit 1
+fi
 if rg -q '!!js \[' "$framework_root/dsh"; then
   echo "validation failed: !!js sequence tags are unsupported; quote the complete JS expression" >&2
   exit 1

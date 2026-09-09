@@ -49,3 +49,4 @@ coverage/
 .DS_Store
 .idea/
 .vscode/
+.trufflehog-exclude
