@@ -15,9 +15,9 @@ services:
       dockerfile: docker/Dockerfile
       args:
         DSH_SOURCE_URL: ${DSH_SOURCE_URL:-https://github.com/n0pe-sled/deepseek-harness.git}
-        DSH_SOURCE_REF: ${DSH_SOURCE_REF:-b150a551b8d465e31e418e1b2eaf5e79bbb7d28e}
+        DSH_SOURCE_REF: ${DSH_SOURCE_REF:-cf12e8a45cdd75f666b62341c7912d46d7a5f630}
         DSH_PLUGINS_SOURCE_URL: ${DSH_PLUGINS_SOURCE_URL:-https://github.com/n0pe-sled/deepseek-harness-plugins.git}
-        DSH_PLUGINS_SOURCE_REF: ${DSH_PLUGINS_SOURCE_REF:-82f8facff67e77d9ce00eccb57e90bc3f62a1b65}
+        DSH_PLUGINS_SOURCE_REF: ${DSH_PLUGINS_SOURCE_REF:-6dabfa856325464b8016158a8032c05ddcf10e99}
         DSH_SKILLS_SOURCE_URL: ${DSH_SKILLS_SOURCE_URL:-https://github.com/n0pe-sled/deepseek-harness-skills.git}
         DSH_SKILLS_SOURCE_REF: ${DSH_SKILLS_SOURCE_REF:-ad6542be82d551e93d8809fd42260081222b2251}
         GHIDRA_MCP_REF: ${GHIDRA_MCP_REF:-6f7e7e8988e1efde5dd23372df71fe05c115722e}

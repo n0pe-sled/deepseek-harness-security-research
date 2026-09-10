@@ -1,7 +1,7 @@
 FROM node:22-bookworm-slim AS dsh-builder
 
 ARG DSH_SOURCE_URL=https://github.com/n0pe-sled/deepseek-harness.git
-ARG DSH_SOURCE_REF=b150a551b8d465e31e418e1b2eaf5e79bbb7d28e
+ARG DSH_SOURCE_REF=cf12e8a45cdd75f666b62341c7912d46d7a5f630
 
 RUN apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ca-certificates git python3 make g++ \
@@ -23,7 +23,7 @@ RUN pnpm --dir /opt/deepseek-harness install --frozen-lockfile \
 FROM node:22-bookworm-slim AS customizations-builder
 
 ARG DSH_PLUGINS_SOURCE_URL=https://github.com/n0pe-sled/deepseek-harness-plugins.git
-ARG DSH_PLUGINS_SOURCE_REF=82f8facff67e77d9ce00eccb57e90bc3f62a1b65
+ARG DSH_PLUGINS_SOURCE_REF=6dabfa856325464b8016158a8032c05ddcf10e99
 # The skills repo is fetch-pinned, so its revision must exist on the origin
 # remote before rebuilding.
 ARG DSH_SKILLS_SOURCE_URL=https://github.com/n0pe-sled/deepseek-harness-skills.git
@@ -68,9 +68,9 @@ ARG JD_MCP_DUO_VERSION=v4.2.5.4
 ARG JD_MCP_DUO_SHA256=a68762013ca9375b72d7021a5732dba3743de67f7c25b1834f3579f00672ff3f
 ARG WIRESHARK_MCP_REF=2a8c009fb38723a9212e47d6156cc8a6b2f624c0
 ARG DSH_SOURCE_URL=https://github.com/n0pe-sled/deepseek-harness.git
-ARG DSH_SOURCE_REF=b150a551b8d465e31e418e1b2eaf5e79bbb7d28e
+ARG DSH_SOURCE_REF=cf12e8a45cdd75f666b62341c7912d46d7a5f630
 ARG DSH_PLUGINS_SOURCE_URL=https://github.com/n0pe-sled/deepseek-harness-plugins.git
-ARG DSH_PLUGINS_SOURCE_REF=82f8facff67e77d9ce00eccb57e90bc3f62a1b65
+ARG DSH_PLUGINS_SOURCE_REF=6dabfa856325464b8016158a8032c05ddcf10e99
 ARG DSH_SKILLS_SOURCE_URL=https://github.com/n0pe-sled/deepseek-harness-skills.git
 ARG DSH_SKILLS_SOURCE_REF=ad6542be82d551e93d8809fd42260081222b2251
 
